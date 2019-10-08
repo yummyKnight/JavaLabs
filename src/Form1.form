@@ -85,13 +85,6 @@
           </component>
         </children>
       </toolbar>
-      <component id="32148" class="javax.swing.JTable" binding="mainTable" custom-create="true">
-        <constraints border-constraint="Center"/>
-        <properties>
-          <showHorizontalLines value="true"/>
-          <showVerticalLines value="true"/>
-        </properties>
-      </component>
       <grid id="3639" binding="subPanel" layout-manager="BorderLayout" hgap="0" vgap="0">
         <constraints border-constraint="South"/>
         <properties/>
@@ -111,6 +104,22 @@
           </component>
         </children>
       </grid>
+      <scrollpane id="d84f2" binding="mainScrollPanel">
+        <constraints border-constraint="Center"/>
+        <properties>
+          <horizontalScrollBarPolicy value="31"/>
+        </properties>
+        <border type="none"/>
+        <children>
+          <component id="e9dd1" class="javax.swing.JTable" binding="mainTable" custom-create="true">
+            <constraints/>
+            <properties>
+              <showHorizontalLines value="true"/>
+              <showVerticalLines value="true"/>
+            </properties>
+          </component>
+        </children>
+      </scrollpane>
     </children>
   </grid>
   <buttonGroups>

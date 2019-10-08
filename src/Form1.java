@@ -2,9 +2,12 @@
 import org.jdesktop.swingbinding.JComboBoxBinding;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumnModel;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 public class Form1 extends JDialog {
     private JPanel contentPane;
@@ -19,19 +22,35 @@ public class Form1 extends JDialog {
     private JPanel subPanel;
     private JComboBox comboBox1;
     private JTextField textField1;
-    private JButton buttonOK;
+    private JScrollPane mainScrollPanel;
+    private DefaultTableModel model;
     private String[] header = new String[]{"Водители", "Маршрут", "График"};
     private Object[][] info = new String[][]{{"Vasya", "Pukin", "Улица Александрова - Невский проспект"}};
 
-    public Form1() {
+    private Form1() {
+        //Конструктор формы
         $$$setupUI$$$();
         setContentPane(contentPane);
         setModal(true);
-        getRootPane().setDefaultButton(buttonOK);
 
+        routeButon.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                windowInvocation();
+            }
+        });
+    }
+
+    private void windowInvocation() {
+        RouteForm form1 = new RouteForm();
+        form1.setVisible(true);
     }
 
     private void setIcons() {
+        /*
+          Установка иконок
+
+          */
         buttonConverter(addButton);
         addButton.setIcon(new ImageIcon("icons/play-button.png"));
         addButton.setPressedIcon(new ImageIcon("icons/play-deleteButton.png"));
@@ -48,6 +67,9 @@ public class Form1 extends JDialog {
     }
 
     private void buttonConverter(JButton button) {
+        /**
+         *  От кнопки остается только значок
+         */
         button.setBorderPainted(false);
         button.setBorder(null);
         button.setFocusable(false);
@@ -116,9 +138,6 @@ public class Form1 extends JDialog {
         ToolBar.add(toolBar$Separator6);
         textField1 = new JTextField();
         ToolBar.add(textField1);
-        mainTable.setShowHorizontalLines(true);
-        mainTable.setShowVerticalLines(true);
-        contentPane.add(mainTable, BorderLayout.CENTER);
         subPanel = new JPanel();
         subPanel.setLayout(new BorderLayout(0, 0));
         contentPane.add(subPanel, BorderLayout.SOUTH);
@@ -128,6 +147,12 @@ public class Form1 extends JDialog {
         driverButton = new JButton();
         driverButton.setText("Button");
         subPanel.add(driverButton, BorderLayout.EAST);
+        mainScrollPanel = new JScrollPane();
+        mainScrollPanel.setHorizontalScrollBarPolicy(31);
+        contentPane.add(mainScrollPanel, BorderLayout.CENTER);
+        mainTable.setShowHorizontalLines(true);
+        mainTable.setShowVerticalLines(true);
+        mainScrollPanel.setViewportView(mainTable);
     }
 
     /**
@@ -139,7 +164,8 @@ public class Form1 extends JDialog {
 
     private void createUIComponents() {
         // TODO: place custom component creation code here
-        mainTable = new JTable(info, header);
+        model = new DefaultTableModel(info, header);
+        mainTable = new JTable(model);
         comboBox1 = new JComboBox(new String[]{"Ключевому слову", "По выражению"});
     }
 }
