@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="Form1">
+  <grid id="cbd77" binding="contentPane" layout-manager="BorderLayout" hgap="0" vgap="0">
+    <constraints>
+      <xy x="48" y="54" width="1047" height="732"/>
+    </constraints>
+    <properties/>
+    <border type="bevel-lowered"/>
+    <children>
+      <toolbar id="1ab21" binding="ToolBar">
+        <constraints border-constraint="North"/>
+        <properties>
+          <floatable value="false"/>
+          <margin top="5" left="5" bottom="5" right="5"/>
+        </properties>
+        <border type="none"/>
+        <children>
+          <component id="d293b" class="javax.swing.JButton" binding="addButton">
+            <constraints/>
+            <properties>
+              <enabled value="true"/>
+              <hideActionText value="false"/>
+              <text value=""/>
+              <toolTipText value="Добавить информацию"/>
+            </properties>
+          </component>
+          <component id="55edf" class="javax.swing.JToolBar$Separator">
+            <constraints/>
+            <properties/>
+          </component>
+          <component id="ed961" class="javax.swing.JButton" binding="deleteButton">
+            <constraints/>
+            <properties>
+              <text value=""/>
+              <toolTipText value="Удалить инфу"/>
+            </properties>
+          </component>
+          <component id="4ee47" class="javax.swing.JToolBar$Separator">
+            <constraints/>
+            <properties/>
+          </component>
+          <component id="6b3db" class="javax.swing.JButton" binding="saveButton">
+            <constraints/>
+            <properties>
+              <text value=""/>
+              <toolTipText value="Сохранить"/>
+            </properties>
+          </component>
+          <component id="15082" class="javax.swing.JToolBar$Separator">
+            <constraints/>
+            <properties/>
+          </component>
+          <component id="2a9e6" class="javax.swing.JButton" binding="questionButton">
+            <constraints/>
+            <properties>
+              <text value=""/>
+              <toolTipText value="Справка"/>
+            </properties>
+          </component>
+          <component id="58e3" class="javax.swing.JToolBar$Separator">
+            <constraints/>
+            <properties/>
+          </component>
+          <component id="a9a76" class="javax.swing.JLabel">
+            <constraints/>
+            <properties>
+              <text value="Поиск по"/>
+            </properties>
+          </component>
+          <component id="5a13d" class="javax.swing.JToolBar$Separator">
+            <constraints/>
+            <properties/>
+          </component>
+          <component id="b638a" class="javax.swing.JComboBox" binding="comboBox1" custom-create="true" default-binding="true">
+            <constraints/>
+            <properties/>
+          </component>
+          <component id="824ac" class="javax.swing.JToolBar$Separator">
+            <constraints/>
+            <properties/>
+          </component>
+          <component id="fbfc8" class="javax.swing.JTextField" binding="textField1" default-binding="true">
+            <constraints/>
+            <properties/>
+          </component>
+        </children>
+      </toolbar>
+      <component id="32148" class="javax.swing.JTable" binding="mainTable" custom-create="true">
+        <constraints border-constraint="Center"/>
+        <properties>
+          <showHorizontalLines value="true"/>
+          <showVerticalLines value="true"/>
+        </properties>
+      </component>
+      <grid id="3639" binding="subPanel" layout-manager="BorderLayout" hgap="0" vgap="0">
+        <constraints border-constraint="South"/>
+        <properties/>
+        <border type="none"/>
+        <children>
+          <component id="7e03e" class="javax.swing.JButton" binding="routeButon">
+            <constraints border-constraint="West"/>
+            <properties>
+              <text value="Button"/>
+            </properties>
+          </component>
+          <component id="49534" class="javax.swing.JButton" binding="driverButton">
+            <constraints border-constraint="East"/>
+            <properties>
+              <text value="Button"/>
+            </properties>
+          </component>
+        </children>
+      </grid>
+    </children>
+  </grid>
+  <buttonGroups>
+    <group name="buttonGroup1">
+      <member id="fbdeb"/>
+    </group>
+  </buttonGroups>
+</form>
