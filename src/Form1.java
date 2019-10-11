@@ -3,11 +3,11 @@ import org.jdesktop.swingbinding.JComboBoxBinding;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.JTableHeader;
-import javax.swing.table.TableColumnModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 public class Form1 extends JDialog {
     private JPanel contentPane;
@@ -25,18 +25,24 @@ public class Form1 extends JDialog {
     private JScrollPane mainScrollPanel;
     private DefaultTableModel model;
     private String[] header = new String[]{"Водители", "Маршрут", "График"};
-    private Object[][] info = new String[][]{{"Vasya", "Pukin", "Улица Александрова - Невский проспект"}};
+    private Object[][] info = new String[][]{{"Vasya", "Pukin", "Улица Александрова - Невский проспект"}, {"Vasya", "Pukin", "Улица Александрова - Невский проспект"}, {"Vasya", "Pukin", "Улица Александрова - Невский проспект"}, {"Vasya", "Pukin", "Улица Александрова - Невский проспект"}};
 
     private Form1() {
         //Конструктор формы
         $$$setupUI$$$();
         setContentPane(contentPane);
         setModal(true);
+        routeButon.addActionListener(e -> windowInvocation());
 
-        routeButon.addActionListener(new ActionListener() {
+        mainTable.addMouseListener(new MouseAdapter() {
             @Override
-            public void actionPerformed(ActionEvent e) {
-                windowInvocation();
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2 && !e.isConsumed()) {
+                    JOptionPane.showMessageDialog(null, "Проверка нажатия на кнопку");
+                        Point point = e.getPoint();
+                        int row = mainTable.rowAtPoint(point);
+                    System.out.println(row);
+                }
             }
         });
     }
@@ -67,9 +73,7 @@ public class Form1 extends JDialog {
     }
 
     private void buttonConverter(JButton button) {
-        /**
-         *  От кнопки остается только значок
-         */
+        // От кнопки остается только значок
         button.setBorderPainted(false);
         button.setBorder(null);
         button.setFocusable(false);
@@ -164,8 +168,13 @@ public class Form1 extends JDialog {
 
     private void createUIComponents() {
         // TODO: place custom component creation code here
-        model = new DefaultTableModel(info, header);
+        model = new DefaultTableModel(info, header) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
         mainTable = new JTable(model);
-        comboBox1 = new JComboBox(new String[]{"Ключевому слову", "По выражению"});
+        comboBox1 = new JComboBox(new String[]{"Ключевому слову", "Вражению"});
     }
 }
