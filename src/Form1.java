@@ -1,13 +1,11 @@
-
-import org.jdesktop.swingbinding.JComboBoxBinding;
-
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableModel;
+import javax.swing.table.TableRowSorter;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 
 public class Form1 extends JDialog {
     private JPanel contentPane;
@@ -21,11 +19,13 @@ public class Form1 extends JDialog {
     private JButton driverButton;
     private JPanel subPanel;
     private JComboBox comboBox1;
-    private JTextField textField1;
+    private JTextField searchField;
     private JScrollPane mainScrollPanel;
+    private JTextArea textArea1;
+    private TableRowSorter<TableModel> rowSorter;
     private DefaultTableModel model;
     private String[] header = new String[]{"Водители", "Маршрут", "График"};
-    private Object[][] info = new String[][]{{"Vasya", "Pukin", "Улица Александрова - Невский проспект"}, {"Vasya", "Pukin", "Улица Александрова - Невский проспект"}, {"Vasya", "Pukin", "Улица Александрова - Невский проспект"}, {"Vasya", "Pukin", "Улица Александрова - Невский проспект"}};
+    private Object[][] info = new String[][]{{"Pukin", "Vasya", "Улица Александрова - Невский проспект"}, {"Zalupkin", "Petia", "Улица Александрова - Невский проспект"}, {"Topkin", "Ropkin", "Улица Александрова - Невский проспект"}, {"Vasya", "Pukin", "Улица Александрова - Невский проспект"}};
 
     private Form1() {
         //Конструктор формы
@@ -39,12 +39,37 @@ public class Form1 extends JDialog {
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() == 2 && !e.isConsumed()) {
                     JOptionPane.showMessageDialog(null, "Проверка нажатия на кнопку");
-                        Point point = e.getPoint();
-                        int row = mainTable.rowAtPoint(point);
+                    Point point = e.getPoint();
+                    int row = mainTable.rowAtPoint(point);
                     System.out.println(row);
                 }
             }
         });
+
+        searchField.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                findInTable(searchField.getText());
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                findInTable(searchField.getText());
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                throw new UnsupportedOperationException();
+            }
+        });
+    }
+
+    private void findInTable(String text) {
+        if (text.trim().length() == 0) {
+            rowSorter.setRowFilter(null);
+        } else {
+            rowSorter.setRowFilter(RowFilter.regexFilter("(?i)" + text));
+        }
     }
 
     private void windowInvocation() {
@@ -140,8 +165,10 @@ public class Form1 extends JDialog {
         ToolBar.add(comboBox1);
         final JToolBar.Separator toolBar$Separator6 = new JToolBar.Separator();
         ToolBar.add(toolBar$Separator6);
-        textField1 = new JTextField();
-        ToolBar.add(textField1);
+        searchField = new JTextField();
+        ToolBar.add(searchField);
+        textArea1 = new JTextArea();
+        ToolBar.add(textArea1);
         subPanel = new JPanel();
         subPanel.setLayout(new BorderLayout(0, 0));
         contentPane.add(subPanel, BorderLayout.SOUTH);
@@ -175,6 +202,8 @@ public class Form1 extends JDialog {
             }
         };
         mainTable = new JTable(model);
+        rowSorter = new TableRowSorter<TableModel>(model);
+        mainTable.setRowSorter(rowSorter);
         comboBox1 = new JComboBox(new String[]{"Ключевому слову", "Вражению"});
     }
 }

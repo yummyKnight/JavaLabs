@@ -1,23 +1,23 @@
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
-import com.intellij.uiDesigner.core.Spacer;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 
 public class ChangeForm extends JDialog {
-    private JButton button1;
-    private JComboBox addComboBox;
-    private JTable driversTable;
-    private JTextArea routeText;
     private JPanel rootPanel;
+    private JTable driversTable;
+    private JTable stopsTable;
+    private JButton button1;
+    private JComboBox comboBox1;
 
     protected ChangeForm() {
         $$$setupUI$$$();
         setContentPane(rootPanel);
         setModal(true);
         setSize(new Dimension(500, 500));
-
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
     }
 
     public static void main(String[] args) {
@@ -37,44 +37,20 @@ public class ChangeForm extends JDialog {
     private void $$$setupUI$$$() {
         createUIComponents();
         rootPanel = new JPanel();
-        rootPanel.setLayout(new GridBagLayout());
+        rootPanel.setLayout(new GridLayoutManager(4, 3, new Insets(0, 0, 0, 0), -1, -1));
         final JScrollPane scrollPane1 = new JScrollPane();
-        GridBagConstraints gbc;
-        gbc = new GridBagConstraints();
-        gbc.gridx = 0;
-        gbc.gridy = 2;
-        gbc.gridheight = 3;
-        gbc.weightx = 1.0;
-        gbc.weighty = 1.0;
-        gbc.fill = GridBagConstraints.BOTH;
-        rootPanel.add(scrollPane1, gbc);
+        rootPanel.add(scrollPane1, new GridConstraints(0, 0, 4, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         scrollPane1.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(new Color(-4473925)), null));
-        driversTable = new JTable();
         scrollPane1.setViewportView(driversTable);
-        routeText = new JTextArea();
-        gbc = new GridBagConstraints();
-        gbc.gridx = 1;
-        gbc.gridy = 2;
-        gbc.gridwidth = 2;
-        gbc.gridheight = 2;
-        gbc.weighty = 1.0;
-        gbc.fill = GridBagConstraints.BOTH;
-        rootPanel.add(routeText, gbc);
+        final JScrollPane scrollPane2 = new JScrollPane();
+        rootPanel.add(scrollPane2, new GridConstraints(0, 1, 3, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        stopsTable.setAutoCreateRowSorter(false);
+        scrollPane2.setViewportView(stopsTable);
         button1 = new JButton();
         button1.setText("Button");
-        gbc = new GridBagConstraints();
-        gbc.gridx = 1;
-        gbc.gridy = 4;
-        gbc.weighty = 1.0;
-        gbc.anchor = GridBagConstraints.SOUTHWEST;
-        rootPanel.add(button1, gbc);
-        gbc = new GridBagConstraints();
-        gbc.gridx = 2;
-        gbc.gridy = 4;
-        gbc.weighty = 1.0;
-        gbc.anchor = GridBagConstraints.SOUTHWEST;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        rootPanel.add(addComboBox, gbc);
+        rootPanel.add(button1, new GridConstraints(3, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        comboBox1 = new JComboBox();
+        rootPanel.add(comboBox1, new GridConstraints(3, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
     }
 
     /**
@@ -86,7 +62,20 @@ public class ChangeForm extends JDialog {
 
     private void createUIComponents() {
         // TODO: place custom component creation code here
-        addComboBox = new JComboBox(new String[]{"Дядя Вася", "Дядя Петя"});
+        var driveModel = new DefaultTableModel(new Object[][]{{"Василий Андреевич"}, {"Андрей Васильевич"}}, new String[]{"Водители"}) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        driversTable = new JTable(driveModel);
+        var stopsModel = new DefaultTableModel(new Object[][]{{"ул. Репина"}, {"ул. Васянина"}}, new String[]{"Остановки"}) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        stopsTable = new JTable(stopsModel);
     }
 }
 

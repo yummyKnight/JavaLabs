@@ -79,7 +79,11 @@
             <constraints/>
             <properties/>
           </component>
-          <component id="fbfc8" class="javax.swing.JTextField" binding="textField1" default-binding="true">
+          <component id="fbfc8" class="javax.swing.JTextField" binding="searchField">
+            <constraints/>
+            <properties/>
+          </component>
+          <component id="a5954" class="javax.swing.JTextArea" binding="textArea1" default-binding="true">
             <constraints/>
             <properties/>
           </component>
