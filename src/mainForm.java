@@ -6,8 +6,11 @@ import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.regex.PatternSyntaxException;
 
-public class Form1 extends JDialog {
+public class mainForm extends JDialog {
     private JPanel contentPane;
     private JButton addButton;
     private JButton deleteButton;
@@ -18,17 +21,57 @@ public class Form1 extends JDialog {
     private JButton routeButon;
     private JButton driverButton;
     private JPanel subPanel;
-    private JComboBox comboBox1;
     private JTextField searchField;
     private JScrollPane mainScrollPanel;
-    private JTextArea textArea1;
+    private JCheckBox registerCheckBox;
     private TableRowSorter<TableModel> rowSorter;
     private DefaultTableModel model;
     private String[] header = new String[]{"Водители", "Маршрут", "График"};
-    private Object[][] info = new String[][]{{"Pukin", "Vasya", "Улица Александрова - Невский проспект"}, {"Zalupkin", "Petia", "Улица Александрова - Невский проспект"}, {"Topkin", "Ropkin", "Улица Александрова - Невский проспект"}, {"Vasya", "Pukin", "Улица Александрова - Невский проспект"}};
+    private boolean searchMode = false;
+    private String test = "ул. Пупкина, ул. Мохнатова, ул. Стремина";
+    private ArrayList<Driver> allDrivers = new ArrayList<>();
+    private ArrayList<Route> allRouts = new ArrayList<>();
 
-    private Form1() {
+    public ArrayList<Driver> getAllDrivers() {
+        return allDrivers;
+    }
+
+    public ArrayList<Route> getAllRouts() {
+        return allRouts;
+    }
+
+    private void createData() {
+        int i = 0;
+        for (String n : ("Лазарев Гордей Оскарович\n" +
+                "Журавлёв Нинель Григорьевич\n" +
+                "Архипов Лазарь Мартынович\n" +
+                "Калашников Савелий Ростиславович\n" +
+                "Потапов Арнольд Платонович\n" +
+                "Ермаков Богдан Антонович\n" +
+                "Хохлов Людвиг Давидович\n" +
+                "Зайцев Аввакум Серапионович\n" +
+                "Евдокимов Аристарх Матвеевич\n" +
+                "Кондратьев Борис Филатович").split("\n")
+        ) {
+            allDrivers.add(new Driver(n, i, i));
+        }
+        allRouts.add(new Route(allDrivers, new ArrayList<String>(Arrays.asList(test.split(","))), "9.50 - 7.20"));
+    }
+
+    private Object[][] createTableData() {
+        Object[][] result = new Object[allRouts.size()][3];
+        int i = 0;
+        for (Route route : allRouts) {
+            result[i][0] = route.driversToString();
+            result[i][1] = route.displayShortRoute();
+            result[i][2] = route.getTime();
+        }
+        return result;
+    }
+
+    private mainForm() {
         //Конструктор формы
+        createData();
         $$$setupUI$$$();
         setContentPane(contentPane);
         setModal(true);
@@ -68,12 +111,20 @@ public class Form1 extends JDialog {
         if (text.trim().length() == 0) {
             rowSorter.setRowFilter(null);
         } else {
-            rowSorter.setRowFilter(RowFilter.regexFilter("(?i)" + text));
+            try {
+                if (registerCheckBox.isSelected()) {
+                    rowSorter.setRowFilter(RowFilter.regexFilter(text));
+                } else {
+                    rowSorter.setRowFilter(RowFilter.regexFilter("(?i)" + text));
+                }
+            } catch (PatternSyntaxException e) {
+                rowSorter.setRowFilter(null);
+            }
         }
     }
 
     private void windowInvocation() {
-        RouteForm form1 = new RouteForm();
+        ChangeForm form1 = new ChangeForm();
         form1.setVisible(true);
     }
 
@@ -107,7 +158,7 @@ public class Form1 extends JDialog {
     }
 
     public static void main(String[] args) {
-        Form1 dialog = new Form1();
+        mainForm dialog = new mainForm();
         dialog.getContentPane().setPreferredSize(new Dimension(1000, 500));
         dialog.setIcons();
         dialog.pack();
@@ -162,13 +213,14 @@ public class Form1 extends JDialog {
         ToolBar.add(label1);
         final JToolBar.Separator toolBar$Separator5 = new JToolBar.Separator();
         ToolBar.add(toolBar$Separator5);
-        ToolBar.add(comboBox1);
         final JToolBar.Separator toolBar$Separator6 = new JToolBar.Separator();
         ToolBar.add(toolBar$Separator6);
         searchField = new JTextField();
         ToolBar.add(searchField);
-        textArea1 = new JTextArea();
-        ToolBar.add(textArea1);
+        registerCheckBox = new JCheckBox();
+        registerCheckBox.setText("регистр");
+        registerCheckBox.setToolTipText("Игнорировать регистр?");
+        ToolBar.add(registerCheckBox);
         subPanel = new JPanel();
         subPanel.setLayout(new BorderLayout(0, 0));
         contentPane.add(subPanel, BorderLayout.SOUTH);
@@ -195,7 +247,7 @@ public class Form1 extends JDialog {
 
     private void createUIComponents() {
         // TODO: place custom component creation code here
-        model = new DefaultTableModel(info, header) {
+        model = new DefaultTableModel(createTableData(), header) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
@@ -204,6 +256,5 @@ public class Form1 extends JDialog {
         mainTable = new JTable(model);
         rowSorter = new TableRowSorter<TableModel>(model);
         mainTable.setRowSorter(rowSorter);
-        comboBox1 = new JComboBox(new String[]{"Ключевому слову", "Вражению"});
     }
 }

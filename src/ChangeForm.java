@@ -4,19 +4,21 @@ import com.intellij.uiDesigner.core.GridLayoutManager;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-
 public class ChangeForm extends JDialog {
     private JPanel rootPanel;
-    private JTable driversTable;
-    private JTable stopsTable;
-    private JButton button1;
-    private JComboBox comboBox1;
+    private JTable driversOnRouteTable;
+    private JTable ExistingStopsTable;
+    private JTable AllDriversTable;
+    private JScrollPane scrollPanel1;
+    private JTable stopsOnRouteTable;
+    private JButton addNewDriverButton;
+    private JButton addNewStopButton;
 
-    protected ChangeForm() {
+    ChangeForm() {
         $$$setupUI$$$();
         setContentPane(rootPanel);
         setModal(true);
-        setSize(new Dimension(500, 500));
+        setSize(new Dimension(500, 1000));
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
     }
 
@@ -25,6 +27,26 @@ public class ChangeForm extends JDialog {
         //dialog.getContentPane().setPreferredSize(new Dimension(500, 1000));
         dialog.pack();
         dialog.setVisible(true);
+    }
+    public Object[][] getALLDriversFIOAsArrays() {
+        Object[][] result = new Object[ .size()][1];
+        int i = 0;
+        for (Driver driver : drivers) {
+            result[i][0] = driver.getFIO();
+        }
+        return result;
+    }
+
+    private void initDriversTables() {
+
+        var driveModel = new DefaultTableModel(new Object[][], new String[]{"Все Водители"}) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        driversOnRouteTable = new JTable(driveModel);
+
     }
 
     /**
@@ -37,20 +59,31 @@ public class ChangeForm extends JDialog {
     private void $$$setupUI$$$() {
         createUIComponents();
         rootPanel = new JPanel();
-        rootPanel.setLayout(new GridLayoutManager(4, 3, new Insets(0, 0, 0, 0), -1, -1));
+        rootPanel.setLayout(new GridLayoutManager(5, 4, new Insets(0, 0, 0, 0), -1, -1));
+        scrollPanel1 = new JScrollPane();
+        rootPanel.add(scrollPanel1, new GridConstraints(0, 1, 4, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(303, 427), null, 0, false));
+        scrollPanel1.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(new Color(-4473925)), null));
+        scrollPanel1.setViewportView(driversOnRouteTable);
         final JScrollPane scrollPane1 = new JScrollPane();
-        rootPanel.add(scrollPane1, new GridConstraints(0, 0, 4, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        rootPanel.add(scrollPane1, new GridConstraints(0, 0, 4, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(608, 427), null, 0, false));
         scrollPane1.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(new Color(-4473925)), null));
-        scrollPane1.setViewportView(driversTable);
+        scrollPane1.setViewportView(AllDriversTable);
         final JScrollPane scrollPane2 = new JScrollPane();
-        rootPanel.add(scrollPane2, new GridConstraints(0, 1, 3, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
-        stopsTable.setAutoCreateRowSorter(false);
-        scrollPane2.setViewportView(stopsTable);
-        button1 = new JButton();
-        button1.setText("Button");
-        rootPanel.add(button1, new GridConstraints(3, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        comboBox1 = new JComboBox();
-        rootPanel.add(comboBox1, new GridConstraints(3, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        rootPanel.add(scrollPane2, new GridConstraints(0, 2, 4, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        ExistingStopsTable.setAutoCreateRowSorter(false);
+        scrollPane2.setViewportView(ExistingStopsTable);
+        final JScrollPane scrollPane3 = new JScrollPane();
+        rootPanel.add(scrollPane3, new GridConstraints(0, 3, 4, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        stopsOnRouteTable.setAutoCreateRowSorter(false);
+        scrollPane3.setViewportView(stopsOnRouteTable);
+        addNewDriverButton = new JButton();
+        addNewDriverButton.setText("Добавить");
+        addNewDriverButton.setToolTipText("Добавть нового водителя");
+        rootPanel.add(addNewDriverButton, new GridConstraints(4, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        addNewStopButton = new JButton();
+        addNewStopButton.setText("Добавить");
+        addNewStopButton.setToolTipText("Добавть новую остановку");
+        rootPanel.add(addNewStopButton, new GridConstraints(4, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
     }
 
     /**
@@ -62,20 +95,14 @@ public class ChangeForm extends JDialog {
 
     private void createUIComponents() {
         // TODO: place custom component creation code here
-        var driveModel = new DefaultTableModel(new Object[][]{{"Василий Андреевич"}, {"Андрей Васильевич"}}, new String[]{"Водители"}) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
-        driversTable = new JTable(driveModel);
+
         var stopsModel = new DefaultTableModel(new Object[][]{{"ул. Репина"}, {"ул. Васянина"}}, new String[]{"Остановки"}) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
             }
         };
-        stopsTable = new JTable(stopsModel);
+        ExistingStopsTable = new JTable(stopsModel);
     }
 }
 
