@@ -29,17 +29,7 @@ public class mainForm extends JDialog {
     private String[] header = new String[]{"Водители", "Маршрут", "График"};
     private boolean searchMode = false;
     private String test = "ул. Пупкина, ул. Мохнатова, ул. Стремина";
-    private ArrayList<Driver> allDrivers = new ArrayList<>();
-    private ArrayList<Route> allRouts = new ArrayList<>();
-
-    public ArrayList<Driver> getAllDrivers() {
-        return allDrivers;
-    }
-
-    public ArrayList<Route> getAllRouts() {
-        return allRouts;
-    }
-
+    private DataSingleton singleton = DataSingleton.getInstance();
     private void createData() {
         int i = 0;
         for (String n : ("Лазарев Гордей Оскарович\n" +
@@ -53,15 +43,15 @@ public class mainForm extends JDialog {
                 "Евдокимов Аристарх Матвеевич\n" +
                 "Кондратьев Борис Филатович").split("\n")
         ) {
-            allDrivers.add(new Driver(n, i, i));
+           singleton.allDrivers.add(new Driver(n, i, i));
         }
-        allRouts.add(new Route(allDrivers, new ArrayList<String>(Arrays.asList(test.split(","))), "9.50 - 7.20"));
+        singleton.allRouts.add(new Route(singleton.allDrivers, new ArrayList<String>(Arrays.asList(test.split(","))), "9.50 - 7.20"));
     }
 
     private Object[][] createTableData() {
-        Object[][] result = new Object[allRouts.size()][3];
+        Object[][] result = new Object[singleton.allRouts.size()][3];
         int i = 0;
-        for (Route route : allRouts) {
+        for (Route route : singleton.allRouts) {
             result[i][0] = route.driversToString();
             result[i][1] = route.displayShortRoute();
             result[i][2] = route.getTime();

@@ -65,6 +65,7 @@ public class Route {
         int i = 0;
         for (String stop : stops) {
             result[i][0] = stop;
+            i++;
         }
         return result;
     }

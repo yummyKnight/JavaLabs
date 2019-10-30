@@ -36,7 +36,7 @@
           <color color="-4473925"/>
         </border>
         <children>
-          <component id="a3277" class="javax.swing.JTable" binding="AllDriversTable" custom-create="true">
+          <component id="a3277" class="javax.swing.JTable" binding="ExistingDriversTable" custom-create="true">
             <constraints/>
             <properties/>
           </component>
