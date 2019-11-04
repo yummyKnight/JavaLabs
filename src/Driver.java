@@ -1,21 +1,20 @@
-import java.lang.reflect.Array;
-import java.util.Arrays;
 
 public class Driver {
     private String FIO;
-    private int experience;
-    private int classification;
-    private String[] violations;
-    final static int[] s_classification = {'M', 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
+    private double experience;
+    private String classification;
+    private String violations;
+    final static String[] s_classification = {"M", "0", "1", "2", "3", "4", "5", "6", "7", "9", "9", "10",
+            "11", "12", "13"};
 
-    public Driver(String FIO, int experience, int classification, String[] violations) {
+    public Driver(String FIO, double experience, String classification, String violations) {
         this.FIO = FIO;
         this.experience = experience;
         this.classification = classification;
         this.violations = violations;
     }
 
-    public Driver(String FIO, int experience, int classification) {
+    public Driver(String FIO, double experience, String classification) {
         this.FIO = FIO;
         this.experience = experience;
         this.classification = classification;
@@ -25,11 +24,11 @@ public class Driver {
         return FIO;
     }
 
-    public int getExperience() {
+    public double getExperience() {
         return experience;
     }
 
-    public int getClassification() {
+    public String getClassification() {
         return classification;
     }
 
@@ -41,24 +40,16 @@ public class Driver {
         this.experience = experience;
     }
 
-    public void setClassification(int classification) {
+    public void setClassification(String classification) {
         this.classification = classification;
     }
 
-    public String[] getViolations() {
+    public String getViolations() {
         return violations;
     }
 
-    public void setViolations(String[] violations) {
+    public void setViolations(String violations) {
         this.violations = violations;
     }
 
-    public static boolean checkClassification(int classification) {
-        for (int i : s_classification) {
-            if (i == classification) {
-                return true;
-            }
-        }
-        return false;
-    }
 }

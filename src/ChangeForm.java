@@ -15,7 +15,7 @@ public class ChangeForm extends JDialog {
     private JTable ExistingDriversTable;
     private JScrollPane scrollPanel1;
     private JTable stopsOnRouteTable;
-//     TODO: buttons realisation
+    //     TODO: buttons realisation
     private JButton addNewDriverButton;
     private JButton addNewStopButton;
     private DataSingleton singleton = DataSingleton.getInstance();
@@ -25,6 +25,7 @@ public class ChangeForm extends JDialog {
         setContentPane(rootPanel);
         setModal(true);
         setSize(new Dimension(1000, 500));
+        addNewDriverButton.addActionListener(e -> addNewDriver());
         doubleClickTransitBetweenTables(ExistingDriversTable, driversOnRouteTable);
         doubleClickTransitBetweenTables(ExistingStopsTable, stopsOnRouteTable);
         doubleClickTransitBetweenTables(driversOnRouteTable, ExistingDriversTable);
@@ -58,6 +59,15 @@ public class ChangeForm extends JDialog {
 
     }
 
+    private void addNewDriver() {
+        DriverForm driverForm = new DriverForm();
+        driverForm.setVisible(true);
+//        Проверка на изменения
+        DefaultTableModel model = (DefaultTableModel) ExistingDriversTable.getModel();
+        model.addRow(new Object[]{singleton.allDrivers.get(singleton.allDrivers.size() - 1).getFIO()});
+        model.fireTableDataChanged();
+    }
+
     private Object[][] getALLDriversFIOAsArrays() {
         Object[][] result = new Object[singleton.allDrivers.size()][1];
         int i = 0;
@@ -69,13 +79,7 @@ public class ChangeForm extends JDialog {
     }
 
     private Object[][] getALLStops() {
-        HashSet<String> tmp = new HashSet<>();
-        for (Route route : singleton.allRouts) {
-            Object[][] t = route.getStopsArrays();
-            for (Object[] objects : t) {
-                tmp.add((String) objects[0]);
-            }
-        }
+        HashSet<String> tmp = singleton.getAllStops();
         Object[][] result = new Object[tmp.size()][1];
         int i = 0;
         for (String stop : tmp) {

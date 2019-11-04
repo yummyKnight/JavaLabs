@@ -18,7 +18,7 @@ public class mainForm extends JDialog {
     private JToolBar ToolBar;
     private JButton questionButton;
     private JTable mainTable;
-    private JButton routeButon;
+    private JButton routeButton;
     private JButton driverButton;
     private JPanel subPanel;
     private JTextField searchField;
@@ -27,7 +27,6 @@ public class mainForm extends JDialog {
     private TableRowSorter<TableModel> rowSorter;
     private DefaultTableModel model;
     private String[] header = new String[]{"Водители", "Маршрут", "График"};
-    private boolean searchMode = false;
     private String test = "ул. Пупкина, ул. Мохнатова, ул. Стремина";
     private DataSingleton singleton = DataSingleton.getInstance();
     private void createData() {
@@ -43,7 +42,7 @@ public class mainForm extends JDialog {
                 "Евдокимов Аристарх Матвеевич\n" +
                 "Кондратьев Борис Филатович").split("\n")
         ) {
-           singleton.allDrivers.add(new Driver(n, i, i));
+           singleton.allDrivers.add(new Driver(n, i, Integer.toString(i)));
         }
         singleton.allRouts.add(new Route(singleton.allDrivers, new ArrayList<String>(Arrays.asList(test.split(","))), "9.50 - 7.20"));
     }
@@ -65,7 +64,7 @@ public class mainForm extends JDialog {
         $$$setupUI$$$();
         setContentPane(contentPane);
         setModal(true);
-        routeButon.addActionListener(e -> windowInvocation());
+        routeButton.addActionListener(e -> windowInvocation());
 
         mainTable.addMouseListener(new MouseAdapter() {
             @Override
@@ -214,9 +213,9 @@ public class mainForm extends JDialog {
         subPanel = new JPanel();
         subPanel.setLayout(new BorderLayout(0, 0));
         contentPane.add(subPanel, BorderLayout.SOUTH);
-        routeButon = new JButton();
-        routeButon.setText("Button");
-        subPanel.add(routeButon, BorderLayout.WEST);
+        routeButton = new JButton();
+        routeButton.setText("Button");
+        subPanel.add(routeButton, BorderLayout.WEST);
         driverButton = new JButton();
         driverButton.setText("Button");
         subPanel.add(driverButton, BorderLayout.EAST);

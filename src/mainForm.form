@@ -93,7 +93,7 @@
         <properties/>
         <border type="none"/>
         <children>
-          <component id="7e03e" class="javax.swing.JButton" binding="routeButon">
+          <component id="7e03e" class="javax.swing.JButton" binding="routeButton">
             <constraints border-constraint="West"/>
             <properties>
               <text value="Button"/>

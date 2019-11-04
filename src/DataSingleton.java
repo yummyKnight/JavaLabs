@@ -1,10 +1,10 @@
 import java.util.ArrayList;
+import java.util.HashSet;
 
 public class DataSingleton {
     private static DataSingleton instance = null;
     ArrayList<Driver> allDrivers = new ArrayList<>();
     ArrayList<Route> allRouts = new ArrayList<>();
-
     private DataSingleton() {
     }
 
@@ -24,4 +24,14 @@ public class DataSingleton {
         return null;
     }
 
+    public HashSet<String> getAllStops(){
+        HashSet<String> tmp = new HashSet<>();
+        for (Route route : allRouts) {
+            Object[][] t = route.getStopsArrays();
+            for (Object[] objects : t) {
+                tmp.add((String) objects[0]);
+            }
+        }
+        return tmp;
+    }
 }
