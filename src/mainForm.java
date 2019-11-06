@@ -29,6 +29,7 @@ public class mainForm extends JDialog {
     private String[] header = new String[]{"Водители", "Маршрут", "График"};
     private String test = "ул. Пупкина, ул. Мохнатова, ул. Стремина";
     private DataSingleton singleton = DataSingleton.getInstance();
+
     private void createData() {
         int i = 0;
         for (String n : ("Лазарев Гордей Оскарович\n" +
@@ -42,9 +43,21 @@ public class mainForm extends JDialog {
                 "Евдокимов Аристарх Матвеевич\n" +
                 "Кондратьев Борис Филатович").split("\n")
         ) {
-           singleton.allDrivers.add(new Driver(n, i, Integer.toString(i)));
+            singleton.allDrivers.add(new Driver(n, i, Integer.toString(i)));
         }
         singleton.allRouts.add(new Route(singleton.allDrivers, new ArrayList<String>(Arrays.asList(test.split(","))), "9.50 - 7.20"));
+    }
+
+    private void updateTable() {
+        // clearing table
+        DefaultTableModel model = (DefaultTableModel) mainTable.getModel();
+        model.setRowCount(0);
+        // add data back
+        Object[][] tableData = createTableData();
+        for (Object[] tableDatum : tableData) {
+            model.addRow(tableDatum);
+        }
+        model.fireTableDataChanged();
     }
 
     private Object[][] createTableData() {
@@ -54,6 +67,7 @@ public class mainForm extends JDialog {
             result[i][0] = route.driversToString();
             result[i][1] = route.displayShortRoute();
             result[i][2] = route.getTime();
+            i++;
         }
         return result;
     }
@@ -64,7 +78,7 @@ public class mainForm extends JDialog {
         $$$setupUI$$$();
         setContentPane(contentPane);
         setModal(true);
-        routeButton.addActionListener(e -> windowInvocation());
+        routeButton.addActionListener(e -> addNewRout());
 
         mainTable.addMouseListener(new MouseAdapter() {
             @Override
@@ -112,9 +126,10 @@ public class mainForm extends JDialog {
         }
     }
 
-    private void windowInvocation() {
+    private void addNewRout() {
         ChangeForm form1 = new ChangeForm();
         form1.setVisible(true);
+        updateTable();
     }
 
     private void setIcons() {

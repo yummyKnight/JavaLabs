@@ -3,13 +3,11 @@ import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
 
 import javax.swing.*;
-import javax.swing.text.NumberFormatter;
-import javax.xml.crypto.Data;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
+import java.lang.reflect.Array;
+import java.util.Arrays;
 import java.util.regex.Pattern;
 
 // TODO: -- смена лайаута
@@ -17,12 +15,13 @@ public class DriverForm extends JDialog {
     private JPanel rootPanel;
     private JComboBox ClassComboBox;
     private JTextField NameField;
-    private JFormattedTextField ExpFormatField;
+    private JTextField ExpField;
     private JButton ApproveButton;
     private JTextArea ViolationTextArea;
-    private Pattern namePattern = Pattern.compile("([a-zA-Z]+ [a-zA-Z]+( [a-zA-Z]+)?)");
+    private Pattern namePattern = Pattern.compile("([a-zA-Zа-яА-Я]+ [a-zA-Zа-яА-Я]+( [a-zA-Zа-яА-Я]+)?)");
+    private Pattern expPattern = Pattern.compile("\\d?\\d\\.\\d");
     private DataSingleton singleton = DataSingleton.getInstance();
-
+    private boolean success = false;
     protected DriverForm() {
         /**
          *  Конструктор формы
@@ -38,17 +37,20 @@ public class DriverForm extends JDialog {
         ApproveButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (validateData()) {
+                try {
+                    validateData();
 //                    TODO: -- проверка на совпаления
-                    Driver newDriver = new Driver(NameField.getText(), Double.parseDouble(ExpFormatField.getText().replace(",", ".")), ClassComboBox.getSelectedItem().toString());
+                    Driver newDriver = new Driver(NameField.getText(), Double.parseDouble(ExpField.getText())
+                            , ClassComboBox.getSelectedItem().toString());
                     if (!ViolationTextArea.getText().equals("")) {
                         newDriver.setViolations(ViolationTextArea.getText());
                     }
                     singleton.allDrivers.add(newDriver);
+                    success = true;
                     setVisible(false);
                     dispose();
-                } else {
-                    JOptionPane.showMessageDialog(null, "Данные введены неверно");
+                } catch (IllegalDataException ex) {
+                    JOptionPane.showMessageDialog(null, ex.getMessage());
                 }
             }
         });
@@ -66,13 +68,17 @@ public class DriverForm extends JDialog {
 //        }
 //    }
 
-    private boolean validateName() {
-        String name = NameField.getText();
-        return Pattern.matches(namePattern.pattern(), name);
-    }
-
-    private boolean validateData() {
-        return validateName() && !ExpFormatField.getText().equals("") && ClassComboBox.getSelectedItem() != null;
+    private void validateData() throws IllegalDataException {
+        if (!Pattern.matches(namePattern.pattern(), NameField.getText()))
+            throw new IllegalDataException("Неправильно введено ФИО водителя");
+        if (!Pattern.matches(expPattern.pattern(), ExpField.getText()))
+            throw new IllegalDataException("Неправильно введен опыт работы");
+        // нужно ли?
+        for (Driver driver : singleton.allDrivers) {
+            if (driver.getFIO().equals(NameField.getText())) {
+                throw new IllegalDataException("Такое имя уже есть в таблице");
+            }
+        }
     }
 
     public static void main(String[] args) {
@@ -80,6 +86,10 @@ public class DriverForm extends JDialog {
         //dialog.getContentPane().setPreferredSize(new Dimension(500, 1000));
         dialog.pack();
         dialog.setVisible(true);
+    }
+
+    public boolean isSuccess() {
+        return success;
     }
 
     /**
@@ -114,7 +124,8 @@ public class DriverForm extends JDialog {
         rootPanel.add(spacer4, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_FIXED, 1, new Dimension(10, -1), null, new Dimension(10, -1), 0, false));
         NameField = new JTextField();
         rootPanel.add(NameField, new GridConstraints(3, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
-        rootPanel.add(ExpFormatField, new GridConstraints(5, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+        ExpField = new JTextField();
+        rootPanel.add(ExpField, new GridConstraints(5, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
         ApproveButton = new JButton();
         ApproveButton.setText("Ok");
         rootPanel.add(ApproveButton, new GridConstraints(11, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
@@ -135,15 +146,6 @@ public class DriverForm extends JDialog {
     private void createUIComponents() {
         // TODO: place custom component creation code here
 //        TODO: переделать в обычный JText
-        NumberFormat format = new DecimalFormat("#0.0");
-        NumberFormatter formatter = new NumberFormatter(format);
-        formatter.setValueClass(Double.class);
-        formatter.setMinimum(0.0);
-        formatter.setMaximum(100.0);
-//        formatter.setAllowsInvalid(false);
-        // If you want the value to be committed on each keystroke instead of focus lost
-        formatter.setCommitsOnValidEdit(true);
-        ExpFormatField = new JFormattedTextField(formatter);
         ClassComboBox = new JComboBox<>(Driver.s_classification);
     }
 }
