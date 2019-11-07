@@ -6,6 +6,10 @@ import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.regex.PatternSyntaxException;
@@ -108,6 +112,28 @@ public class mainForm extends JDialog {
                 throw new UnsupportedOperationException();
             }
         });
+        saveButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    saveData();
+                    JOptionPane.showMessageDialog(null, "Данные успешно записаны");
+                } catch (IOException ex) {
+                    JOptionPane.showMessageDialog(null, "Ошибка записи!!!");
+                }
+            }
+        });
+        addButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    loadData();
+                    JOptionPane.showMessageDialog(null, "Данные успешно загружены");
+                } catch (IOException ex) {
+                    JOptionPane.showMessageDialog(null, "Ошибка загрузки");
+                }
+            }
+        });
     }
 
     private void findInTable(String text) {
@@ -159,6 +185,27 @@ public class mainForm extends JDialog {
         button.setFocusable(false);
         button.setMargin(new Insets(0, 0, 0, 0));
         button.setContentAreaFilled(false);
+    }
+
+    private void saveData() throws IOException {
+        FileWriter writer = new FileWriter("save.txt");
+        for (Object[] data : createTableData()) {
+            String row = data[0] + "|" + data[1] + "|" + data[2] + "\n";
+            writer.write(row);
+        }
+        writer.close();
+    }
+
+    private void loadData() throws IOException {
+        BufferedReader reader = new BufferedReader(new FileReader("save.txt"));
+        DefaultTableModel model = (DefaultTableModel) mainTable.getModel();
+        model.setRowCount(0);
+        while (reader.ready()) {
+            String row = reader.readLine();
+            Object[] data = row.split("\\|");
+            model.addRow(data);
+        }
+        model.fireTableDataChanged();
     }
 
     public static void main(String[] args) {
