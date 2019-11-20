@@ -1,7 +1,7 @@
 import java.util.ArrayList;
 import java.util.HashSet;
 
-public class DataSingleton {
+class DataSingleton {
     private static DataSingleton instance = null;
     ArrayList<Driver> allDrivers = new ArrayList<>();
     ArrayList<Route> allRouts = new ArrayList<>();
@@ -16,7 +16,7 @@ public class DataSingleton {
         return instance;
     }
 
-    public Driver getDriverByFIO(String name) {
+     Driver getDriverByFIO(String name) {
         for (Driver driver : allDrivers) {
             if (driver.getFIO().equals(name)) {
                 return driver;

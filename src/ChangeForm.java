@@ -103,6 +103,7 @@ public class ChangeForm extends JDialog {
         dialog.setVisible(true);
     }
 
+
     private void validateData() throws IllegalDataException {
         if (driversOnRouteTable.getRowCount() == 0)
             throw new IllegalDataException("Добаьте хотя бы 1 водителя");
