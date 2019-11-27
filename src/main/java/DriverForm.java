@@ -22,10 +22,7 @@ public class DriverForm extends JDialog {
     private Pattern expPattern = Pattern.compile("\\d?\\d\\.\\d");
     private DataSingleton singleton = DataSingleton.getInstance();
     private boolean success = false;
-    protected DriverForm() {
-        /**
-         *  Конструктор формы
-         * */
+    DriverForm() {
         setTitle("Досье Водителя");
         $$$setupUI$$$();
         setContentPane(rootPanel);
@@ -88,7 +85,7 @@ public class DriverForm extends JDialog {
         dialog.setVisible(true);
     }
 
-    public boolean isSuccess() {
+    boolean isSuccess() {
         return success;
     }
 

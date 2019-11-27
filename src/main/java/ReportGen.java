@@ -15,8 +15,6 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
 public class ReportGen {
-
-
     static void createHTML(String srcXmlFile, String srcXsltFile, String outputFileName) throws TransformerException, IOException {
         // creating html from xml with xslt
         /* Create a TransformerFactory object */

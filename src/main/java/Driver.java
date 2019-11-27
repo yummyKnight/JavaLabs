@@ -36,7 +36,7 @@ public class Driver {
         this.FIO = FIO;
     }
 
-    public void setExperience(int experience) {
+    public void setExperience(double experience) {
         this.experience = experience;
     }
 
