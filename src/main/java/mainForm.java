@@ -33,7 +33,6 @@ public class mainForm extends JDialog {
     private JScrollPane mainScrollPanel;
     private JCheckBox registerCheckBox;
     private TableRowSorter<TableModel> rowSorter;
-    private DefaultTableModel model;
     private String[] header = new String[]{"Водители", "Маршрут", "График"};
     private String test = "ул. Пупкина, ул. Мохнатова, ул. Стремина";
     private DataSingleton singleton = DataSingleton.getInstance();
@@ -119,13 +118,14 @@ public class mainForm extends JDialog {
         saveButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                try {
+//                try {
 //                    saveData();
-                    XMLWrapper.writeXML(mainTable, "table.xml");
+//                    XMLWrapper.writeXML(mainTable, "table.xml");
+                    CustomThreads.doExperiment(mainTable);
                     JOptionPane.showMessageDialog(null, "Данные успешно записаны");
-                } catch (IOException | TransformerException | ParserConfigurationException ex) {
-                    JOptionPane.showMessageDialog(null, "Ошибка записи!!!");
-                }
+//                } catch (IOException | TransformerException | ParserConfigurationException ex) {
+//                    JOptionPane.showMessageDialog(null, "Ошибка записи!!!");
+//                }
             }
         });
         addButton.addActionListener(new ActionListener() {
@@ -162,6 +162,7 @@ public class mainForm extends JDialog {
             }
         }
     }
+
 
     private void addNewRout() {
         ChangeForm form1 = new ChangeForm();
@@ -309,6 +310,7 @@ public class mainForm extends JDialog {
     }
 
     private void createUIComponents() {
+        DefaultTableModel model;
         // TODO: place custom component creation code here
         model = new DefaultTableModel(createTableData(), header) {
             @Override

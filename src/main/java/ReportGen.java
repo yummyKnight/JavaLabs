@@ -1,16 +1,17 @@
-
-import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
-import com.itextpdf.text.html.simpleparser.HTMLWorker;
 import com.itextpdf.text.pdf.BaseFont;
-import com.itextpdf.text.pdf.PdfWriter;
 import org.xhtmlrenderer.pdf.ITextRenderer;
 
-import javax.xml.transform.*;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
-import java.awt.*;
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
 public class ReportGen {
@@ -31,9 +32,9 @@ public class ReportGen {
     }
 
     static void createPDF(String srcXmlFile, String srcXsltFile, String outputFileName) throws TransformerException, IOException, DocumentException {
-        createHTML(srcXmlFile,srcXsltFile,outputFileName);
+        createHTML(srcXmlFile, srcXsltFile, outputFileName);
         String url = new File(outputFileName).toURI().toURL().toString();
-        System.out.println(""+url);
+        System.out.println("" + url);
         String HTML_TO_PDF = "ConvertedFile.pdf";
         OutputStream os = new FileOutputStream(HTML_TO_PDF);
         ITextRenderer renderer = new ITextRenderer();

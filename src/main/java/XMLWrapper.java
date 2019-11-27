@@ -55,9 +55,7 @@ class XMLWrapper {
     }
 
     static void readXML(DefaultTableModel model, String fileName) throws ParserConfigurationException, IOException, SAXException {
-        StringBuilder sb = new StringBuilder();
-        String time = "";
-        String shortStops = "";
+
         DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
         // Чтение документа из файла
         Document document;
@@ -66,6 +64,9 @@ class XMLWrapper {
         document.getDocumentElement().normalize();
         NodeList routes = document.getElementsByTagName("Route");
         for (int i = 0; i < routes.getLength(); i++) {
+            StringBuilder sb = new StringBuilder();
+            String time = "";
+            String shortStops = "";
             if (routes.item(i).getNodeType() == Node.ELEMENT_NODE) {
                 NodeList route = routes.item(i).getChildNodes();
                 for (int j = 0; j < route.getLength(); j++) {
