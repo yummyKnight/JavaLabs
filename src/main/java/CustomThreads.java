@@ -1,3 +1,5 @@
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
 import javax.swing.*;
@@ -13,6 +15,7 @@ public class CustomThreads {
     }
 }
 class ThreadHTML extends Thread {
+    private final Logger logger = LoggerFactory.getLogger(ThreadHTML.class);
     private JTable thisIsWrong;
     ThreadHTML(String name, JTable table) {
         super("ThreadHTML_" + name);
@@ -22,17 +25,19 @@ class ThreadHTML extends Thread {
     @Override
     public void run() {
         try {
+            logger.debug("Нить ThreadHTML начала выполнение");
             changeXMLThread thread = new changeXMLThread("1",thisIsWrong);
             thread.start();
             thread.join();
             ReportGen.createHTML("table.xml", "template.xslt", "sample.html");
-            System.out.println("ThreadHTML done");
+            logger.debug("Нить ThreadHTML закончила выполнение");
         } catch (TransformerException | IOException | InterruptedException e) {
             e.printStackTrace();
         }
     }
 }
 class changeXMLThread extends Thread {
+    private final Logger logger = LoggerFactory.getLogger(changeXMLThread.class);
     private JTable thisIsWrong;
      changeXMLThread(String name, JTable table) {
         super("changeXMLThread_" + name);
@@ -40,6 +45,7 @@ class changeXMLThread extends Thread {
     }
     public void run() {
         try {
+            logger.debug("Нить changeXMLThread начала выполнение");
             loadFromXMLThread thread = new loadFromXMLThread("1", thisIsWrong);
             thread.start();
             thread.join();
@@ -47,13 +53,14 @@ class changeXMLThread extends Thread {
             model.addRow(new Object[] {"Bla1", "Bla2", "Bla3"});
             model.fireTableDataChanged();
             XMLWrapper.writeXML(thisIsWrong,"table.xml");
-            System.out.println("changeXMLThread done");
+            logger.debug("Нить changeXMLThread закончила выполнение");
         } catch (InterruptedException | TransformerException | IOException | ParserConfigurationException e) {
             e.printStackTrace();
         }
     }
 }
 class loadFromXMLThread extends Thread{
+    private final Logger logger = LoggerFactory.getLogger(loadFromXMLThread.class);
     private JTable thisIsWrong;
      loadFromXMLThread(String name, JTable table) {
         super("loadFromXMLThread_" + name);
@@ -63,11 +70,12 @@ class loadFromXMLThread extends Thread{
     @Override
     public void run() {
         try {
+            logger.debug("Нить loadFromXMLThread начала выполнение");
             var model = (DefaultTableModel)thisIsWrong.getModel();
             model.setRowCount(0);
             XMLWrapper.readXML(model, "table.xml");
             model.fireTableDataChanged();
-            System.out.println("loadFromXMLThread done");
+            logger.debug("Нить loadFromXMLThread закончила выполнение");
         } catch (ParserConfigurationException | IOException | SAXException e) {
             e.printStackTrace();
         }

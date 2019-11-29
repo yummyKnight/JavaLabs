@@ -1,6 +1,8 @@
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -18,6 +20,9 @@ import java.util.Date;
 import java.util.HashSet;
 
 public class ChangeForm extends JDialog {
+    // logger
+    private final Logger logger = LoggerFactory.getLogger(ChangeForm.class);
+    // UI
     private JPanel rootPanel;
     private JTable driversOnRouteTable;
     private JTable ExistingStopsTable;
@@ -52,10 +57,10 @@ public class ChangeForm extends JDialog {
                     DefaultTableModel model = (DefaultTableModel) ExistingStopsTable.getModel();
                     model.addRow(new Object[]{stop});
                     model.fireTableDataChanged();
+                    logger.debug("Новая остановка добавлена");
                 }
             }
         });
-        // TODO: -- передача информации в главное окно (Создание нового Route)
         okButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -81,19 +86,19 @@ public class ChangeForm extends JDialog {
                 }
             }
         });
-
+        // setup 1го спиннера
         JSpinner.DateEditor editor = new JSpinner.DateEditor(StartTimeSpinner, "HH:mm");
         DateFormatter formatter = (DateFormatter) editor.getTextField().getFormatter();
         formatter.setAllowsInvalid(false); // this makes what you want
         formatter.setOverwriteMode(true);
         StartTimeSpinner.setEditor(editor);
-
+        // setup 2го спиннера
         JSpinner.DateEditor editor1 = new JSpinner.DateEditor(EndTimeSpinner, "HH:mm");
         DateFormatter formatter1 = (DateFormatter) editor1.getTextField().getFormatter();
         formatter1.setAllowsInvalid(false); // this makes what you want
         formatter1.setOverwriteMode(true);
         EndTimeSpinner.setEditor(editor1);
-
+        logger.info("UI загружен");
     }
 
     public static void main(String[] args) {
@@ -113,6 +118,7 @@ public class ChangeForm extends JDialog {
         Date end = (Date) EndTimeSpinner.getValue();
         if (start.after(end))
             throw new IllegalDataException("Время страрта должно быть меньше времени окончания");
+        logger.info("Данные успешно прошли проверку");
     }
 
     private void doubleClickTransitBetweenTables(JTable src, JTable dst) {
@@ -143,6 +149,7 @@ public class ChangeForm extends JDialog {
             DefaultTableModel model = (DefaultTableModel) ExistingDriversTable.getModel();
             model.addRow(new Object[]{singleton.allDrivers.get(singleton.allDrivers.size() - 1).getFIO()});
             model.fireTableDataChanged();
+            logger.info("Новый водитель успешно добавлен");
         }
     }
 

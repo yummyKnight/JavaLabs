@@ -1,5 +1,6 @@
 import org.xml.sax.SAXException;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -19,6 +20,10 @@ import java.util.Arrays;
 import java.util.regex.PatternSyntaxException;
 
 public class mainForm extends JDialog {
+    // logger
+    private final Logger logger = LoggerFactory.getLogger(mainForm.class);
+
+    //UI
     private JPanel contentPane;
     private JButton addButton;
     private JButton deleteButton;
@@ -53,6 +58,7 @@ public class mainForm extends JDialog {
             singleton.allDrivers.add(new Driver(n, i, Integer.toString(i)));
         }
         singleton.allRouts.add(new Route(singleton.allDrivers, new ArrayList<String>(Arrays.asList(test.split(","))), "9.50 - 7.20"));
+        logger.debug("Начальные данные загружены");
     }
 
     private void updateTable() {
@@ -65,6 +71,7 @@ public class mainForm extends JDialog {
             model.addRow(tableDatum);
         }
         model.fireTableDataChanged();
+        logger.debug("Таблица обновлена");
     }
 
     private Object[][] createTableData() {
@@ -76,7 +83,9 @@ public class mainForm extends JDialog {
             result[i][2] = route.getTime();
             i++;
         }
+        logger.debug("Данные из singleton.allRouts загружены");
         return result;
+
     }
 
     private mainForm() {
@@ -146,6 +155,7 @@ public class mainForm extends JDialog {
                 }
             }
         });
+        logger.info("UI загружен");
     }
 
     private void findInTable(String text) {
@@ -160,6 +170,7 @@ public class mainForm extends JDialog {
                 }
             } catch (PatternSyntaxException e) {
                 rowSorter.setRowFilter(null);
+                logger.debug("Введено неправильное регулярное выражение");
             }
         }
     }

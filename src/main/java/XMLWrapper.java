@@ -1,3 +1,5 @@
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.*;
 import org.xml.sax.SAXException;
 
@@ -19,10 +21,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 class XMLWrapper {
-    private XMLWrapper() {
-    }
-
+    private static final Logger logger = LoggerFactory.getLogger(XMLWrapper.class);
     static void writeXML(JTable table, String fileName) throws ParserConfigurationException, TransformerException, IOException {
+        logger.debug("Начало создание XML-файла {}", fileName);
         DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
         Document document = builder.newDocument();
 
@@ -52,10 +53,11 @@ class XMLWrapper {
         trans.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
         java.io.FileWriter fw = new FileWriter(fileName);
         trans.transform(new DOMSource(document), new StreamResult(fw));
+        logger.debug("Конец создания отчета {}", fileName);
     }
 
     static void readXML(DefaultTableModel model, String fileName) throws ParserConfigurationException, IOException, SAXException {
-
+        logger.debug("Начало считывания XML файла {}", fileName);
         DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
         // Чтение документа из файла
         Document document;
@@ -92,6 +94,6 @@ class XMLWrapper {
             Object[] row = new Object[]{sb.toString(), shortStops, time};
             model.addRow(row);
         }
-
+        logger.debug("Конец считывания XML файла {}", fileName);
     }
 }
