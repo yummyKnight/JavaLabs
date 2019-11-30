@@ -21,7 +21,8 @@ public class DriverForm extends JDialog {
     private Pattern namePattern = Pattern.compile("([a-zA-Zа-яА-Я]+ [a-zA-Zа-яА-Я]+( [a-zA-Zа-яА-Я]+)?)");
     private Pattern expPattern = Pattern.compile("\\d?\\d\\.\\d");
     private DataSingleton singleton = DataSingleton.getInstance();
-    private boolean success = false;
+    // in db driver id always > 0
+    private int newDriverID = -1;
     DriverForm() {
         setTitle("Досье Водителя");
         $$$setupUI$$$();
@@ -42,8 +43,7 @@ public class DriverForm extends JDialog {
                     if (!ViolationTextArea.getText().equals("")) {
                         newDriver.setViolations(ViolationTextArea.getText());
                     }
-                    singleton.allDrivers.add(newDriver);
-                    success = true;
+                    newDriverID =  singleton.addDriver(newDriver);
                     setVisible(false);
                     dispose();
                 } catch (IllegalDataException ex) {
@@ -53,29 +53,15 @@ public class DriverForm extends JDialog {
         });
     }
 
-//    private void setPhoto() {
-//        try {
-//
-//            BufferedImage myPicture = ImageIO.read(new File("photo/person.jpg"));
-//            JLabel label = new JLabel((new ImageIcon(myPicture)));
-//            PhotoPanel.add(label, BorderLayout.NORTH);
-//
-//        } catch (IOException e) {
-//            e.getStackTrace();
-//        }
-//    }
-
     private void validateData() throws IllegalDataException {
         if (!Pattern.matches(namePattern.pattern(), NameField.getText()))
             throw new IllegalDataException("Неправильно введено ФИО водителя");
         if (!Pattern.matches(expPattern.pattern(), ExpField.getText()))
             throw new IllegalDataException("Неправильно введен опыт работы");
         // нужно ли?
-        for (Driver driver : singleton.allDrivers) {
-            if (driver.getFIO().equals(NameField.getText())) {
+            if (singleton.isTwin(NameField.getText())) {
                 throw new IllegalDataException("Такое имя уже есть в таблице");
             }
-        }
     }
 
     public static void main(String[] args) {
@@ -85,8 +71,8 @@ public class DriverForm extends JDialog {
         dialog.setVisible(true);
     }
 
-    boolean isSuccess() {
-        return success;
+    public int getNewDriverID() {
+        return newDriverID;
     }
 
     /**

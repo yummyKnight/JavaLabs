@@ -14,10 +14,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.text.Format;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashSet;
+import java.util.*;
 
 public class ChangeForm extends JDialog {
     // logger
@@ -35,7 +32,7 @@ public class ChangeForm extends JDialog {
     private JSpinner StartTimeSpinner;
     private JSpinner EndTimeSpinner;
     private DataSingleton singleton = DataSingleton.getInstance();
-    private ArrayList<Driver> currentDrivers = new ArrayList<>();
+    private HashSet<Integer> currentDriversIDs = new HashSet<>();
     private ArrayList<String> currentStops = new ArrayList<>();
 
     ChangeForm() {
@@ -65,20 +62,10 @@ public class ChangeForm extends JDialog {
             @Override
             public void actionPerformed(ActionEvent e) {
                 // TODO: сделать быстрее
+                // adding route
                 try {
                     validateData();
-                    for (int i = 0; i < driversOnRouteTable.getRowCount(); i++) {
-                        String driverName = (String) driversOnRouteTable.getValueAt(i, 0);
-                        currentDrivers.add(singleton.getDriverByFIO(driverName));
-                    }
-                    for (int i = 0; i < stopsOnRouteTable.getRowCount(); i++) {
-                        String stop = (String) stopsOnRouteTable.getValueAt(i, 0);
-                        currentStops.add(stop);
-                    }
-                    Format formatter = new SimpleDateFormat("HH.mm");
-                    String startTime = formatter.format((Date) StartTimeSpinner.getValue());
-                    String endTime = formatter.format((Date) EndTimeSpinner.getValue());
-                    singleton.allRouts.add(new Route(currentDrivers, currentStops, startTime + " - " + endTime));
+                    addRouteToTable();
                     setVisible(false);
                     dispose();
                 } catch (IllegalDataException ex) {
@@ -99,6 +86,25 @@ public class ChangeForm extends JDialog {
         formatter1.setOverwriteMode(true);
         EndTimeSpinner.setEditor(editor1);
         logger.info("UI загружен");
+    }
+
+    private void addRouteToTable() {
+
+        for (int i = 0; i < driversOnRouteTable.getRowCount(); i++) {
+            int driver_id = (Integer) driversOnRouteTable.getValueAt(i, 0); ///???
+            currentDriversIDs.add(driver_id);
+        }
+        for (int i = 0; i < stopsOnRouteTable.getRowCount(); i++) {
+            String stop = (String) stopsOnRouteTable.getValueAt(i, 0);
+            currentStops.add(stop);
+        }
+        Format formatter = new SimpleDateFormat("HH.mm");
+        String startTime = formatter.format((Date) StartTimeSpinner.getValue());
+        String endTime = formatter.format((Date) EndTimeSpinner.getValue());
+        singleton.addRoute(new Route(currentDriversIDs, currentStops, startTime + " - " + endTime));
+        // TODO: add to db
+
+
     }
 
     public static void main(String[] args) {
@@ -145,19 +151,20 @@ public class ChangeForm extends JDialog {
         DriverForm driverForm = new DriverForm();
         driverForm.setVisible(true);
 //        Проверка на изменения
-        if (driverForm.isSuccess()) {
+        int tmpID = driverForm.getNewDriverID();
+        if (tmpID != -1) {
             DefaultTableModel model = (DefaultTableModel) ExistingDriversTable.getModel();
-            model.addRow(new Object[]{singleton.allDrivers.get(singleton.allDrivers.size() - 1).getFIO()});
+            model.addRow(new Object[]{singleton.getDriverByKey(tmpID).getFIO()});
             model.fireTableDataChanged();
             logger.info("Новый водитель успешно добавлен");
         }
     }
 
     private Object[][] getALLDriversFIOAsArrays() {
-        Object[][] result = new Object[singleton.allDrivers.size()][1];
+        Object[][] result = new Object[singleton.getDriverSize()][1];
         int i = 0;
-        for (Driver driver : singleton.allDrivers) {
-            result[i][0] = driver.getFIO();
+        for (int t : singleton.getAllDriversID()) {
+            result[i][0] = singleton.getDriverByKey(t).getFIO();
             i++;
         }
         return result;
@@ -265,7 +272,6 @@ public class ChangeForm extends JDialog {
     }
 
     private void createUIComponents() {
-        // TODO: place custom component creation code here
         Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.HOUR_OF_DAY, 24); // 24 == 12 PM == 00:00:00
         calendar.set(Calendar.MINUTE, 0);

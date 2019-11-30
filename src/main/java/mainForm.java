@@ -8,15 +8,12 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.regex.PatternSyntaxException;
 
 public class mainForm extends JDialog {
@@ -38,26 +35,11 @@ public class mainForm extends JDialog {
     private JScrollPane mainScrollPanel;
     private JCheckBox registerCheckBox;
     private TableRowSorter<TableModel> rowSorter;
-    private String[] header = new String[]{"Водители", "Маршрут", "График"};
+    private String[] header = new String[]{"ID", "Водители", "Маршрут", "График"};
     private String test = "ул. Пупкина, ул. Мохнатова, ул. Стремина";
     private DataSingleton singleton = DataSingleton.getInstance();
 
     private void createData() {
-        int i = 0;
-        for (String n : ("Лазарев Гордей Оскарович\n" +
-                "Журавлёв Нинель Григорьевич\n" +
-                "Архипов Лазарь Мартынович\n" +
-                "Калашников Савелий Ростиславович\n" +
-                "Потапов Арнольд Платонович\n" +
-                "Ермаков Богдан Антонович\n" +
-                "Хохлов Людвиг Давидович\n" +
-                "Зайцев Аввакум Серапионович\n" +
-                "Евдокимов Аристарх Матвеевич\n" +
-                "Кондратьев Борис Филатович").split("\n")
-        ) {
-            singleton.allDrivers.add(new Driver(n, i, Integer.toString(i)));
-        }
-        singleton.allRouts.add(new Route(singleton.allDrivers, new ArrayList<String>(Arrays.asList(test.split(","))), "9.50 - 7.20"));
         logger.debug("Начальные данные загружены");
     }
 
@@ -75,12 +57,14 @@ public class mainForm extends JDialog {
     }
 
     private Object[][] createTableData() {
-        Object[][] result = new Object[singleton.allRouts.size()][3];
+        Object[][] result = new Object[singleton.getDriverSize()][4];
         int i = 0;
-        for (Route route : singleton.allRouts) {
-            result[i][0] = route.driversToString();
-            result[i][1] = route.displayShortRoute();
-            result[i][2] = route.getTime();
+        for (int route_id : singleton.getAllRoutesID()) {
+            Route route = singleton.getRouteByKey(route_id);
+            result[i][0] = route_id;
+            result[i][1] = singleton.driversToString(route);
+            result[i][2] = route.displayShortRoute();
+            result[i][3] = route.getTime();
             i++;
         }
         logger.debug("Данные из singleton.allRouts загружены");
