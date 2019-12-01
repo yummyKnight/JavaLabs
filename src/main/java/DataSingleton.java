@@ -1,16 +1,13 @@
+import java.lang.reflect.Array;
 import java.util.*;
 
 class DataSingleton {
 
     private static DataSingleton instance = null;
-    private int driver_id;
-    private int route_id;
     private HashMap<Integer, Driver> allDrivers = new HashMap<>();
     private HashMap<Integer, Route> allRouts = new HashMap<>();
 
     private DataSingleton() {
-        driver_id = 0;
-        route_id = 0;
     }
 
     static DataSingleton getInstance() {
@@ -20,15 +17,12 @@ class DataSingleton {
         return instance;
     }
 
-    int addDriver(Driver driver) {
+    void addDriver(Driver driver, int driver_id) {
         allDrivers.put(driver_id, driver);
-        // TODO: db sync
-        return driver_id++;
     }
 
-    int addRoute(Route route) {
+    void addRoute(Route route, int route_id) {
         allRouts.put(route_id, route);
-        return route_id++;
     }
 
     Driver getDriverByKey(Integer key) {
@@ -62,6 +56,10 @@ class DataSingleton {
         return allDrivers.size();
     }
 
+    int getRoutesSize() {
+        return allRouts.size();
+    }
+
     Set<Integer> getAllDriversID() {
         return allDrivers.keySet();
     }
@@ -70,6 +68,13 @@ class DataSingleton {
         return allRouts.keySet();
     }
 
+    void setAllDrivers(HashMap<Integer, Driver> allDrivers) {
+        this.allDrivers = allDrivers;
+    }
+
+     void setAllRouts(HashMap<Integer, Route> allRouts) {
+        this.allRouts = allRouts;
+    }
 
     HashSet<String> getAllStops() {
         HashSet<String> tmp = new HashSet<>();

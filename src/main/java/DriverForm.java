@@ -7,6 +7,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.lang.reflect.Array;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.regex.Pattern;
 
@@ -23,6 +24,7 @@ public class DriverForm extends JDialog {
     private DataSingleton singleton = DataSingleton.getInstance();
     // in db driver id always > 0
     private int newDriverID = -1;
+
     DriverForm() {
         setTitle("Досье Водителя");
         $$$setupUI$$$();
@@ -43,10 +45,12 @@ public class DriverForm extends JDialog {
                     if (!ViolationTextArea.getText().equals("")) {
                         newDriver.setViolations(ViolationTextArea.getText());
                     }
-                    newDriverID =  singleton.addDriver(newDriver);
+                    newDriverID = dbClass.insertDriver(newDriver);
+                    singleton.addDriver(newDriver, newDriverID);
+
                     setVisible(false);
                     dispose();
-                } catch (IllegalDataException ex) {
+                } catch (IllegalDataException | SQLException ex) {
                     JOptionPane.showMessageDialog(null, ex.getMessage());
                 }
             }
@@ -59,9 +63,9 @@ public class DriverForm extends JDialog {
         if (!Pattern.matches(expPattern.pattern(), ExpField.getText()))
             throw new IllegalDataException("Неправильно введен опыт работы");
         // нужно ли?
-            if (singleton.isTwin(NameField.getText())) {
-                throw new IllegalDataException("Такое имя уже есть в таблице");
-            }
+        if (singleton.isTwin(NameField.getText())) {
+            throw new IllegalDataException("Такое имя уже есть в таблице");
+        }
     }
 
     public static void main(String[] args) {

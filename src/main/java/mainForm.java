@@ -14,6 +14,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.regex.PatternSyntaxException;
 
 public class mainForm extends JDialog {
@@ -40,6 +41,13 @@ public class mainForm extends JDialog {
     private DataSingleton singleton = DataSingleton.getInstance();
 
     private void createData() {
+        try {
+            dbClass.Conn();
+            singleton.setAllDrivers(dbClass.ReadDriversBD());
+            singleton.setAllRouts(dbClass.ReadRouteBD());
+        } catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
         logger.debug("Начальные данные загружены");
     }
 
@@ -57,7 +65,7 @@ public class mainForm extends JDialog {
     }
 
     private Object[][] createTableData() {
-        Object[][] result = new Object[singleton.getDriverSize()][4];
+        Object[][] result = new Object[singleton.getRoutesSize()][4];
         int i = 0;
         for (int route_id : singleton.getAllRoutesID()) {
             Route route = singleton.getRouteByKey(route_id);
@@ -115,8 +123,13 @@ public class mainForm extends JDialog {
 //                try {
 //                    saveData();
 //                    XMLWrapper.writeXML(mainTable, "table.xml");
-                    CustomThreads.doExperiment(mainTable);
+//                    CustomThreads.doExperiment(mainTable);
+                try {
+                    dbClass.commitChanges();
                     JOptionPane.showMessageDialog(null, "Данные успешно записаны");
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
 //                } catch (IOException | TransformerException | ParserConfigurationException ex) {
 //                    JOptionPane.showMessageDialog(null, "Ошибка записи!!!");
 //                }

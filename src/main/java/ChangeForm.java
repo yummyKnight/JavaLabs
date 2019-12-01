@@ -1,18 +1,22 @@
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
+import org.jdesktop.el.Expression;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.text.DateFormatter;
+import javax.swing.text.NumberFormatter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.sql.SQLException;
 import java.text.Format;
+import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -31,6 +35,7 @@ public class ChangeForm extends JDialog {
     private JButton okButton;
     private JSpinner StartTimeSpinner;
     private JSpinner EndTimeSpinner;
+    private JFormattedTextField idField;
     private DataSingleton singleton = DataSingleton.getInstance();
     private HashSet<Integer> currentDriversIDs = new HashSet<>();
     private ArrayList<String> currentStops = new ArrayList<>();
@@ -41,9 +46,9 @@ public class ChangeForm extends JDialog {
         setModal(true);
         setSize(new Dimension(1000, 500));
         addNewDriverButton.addActionListener(e -> addNewDriver());
-        doubleClickTransitBetweenTables(ExistingDriversTable, driversOnRouteTable);
+        doubleClickTransitBetweenTablesWithTwoColumns(ExistingDriversTable, driversOnRouteTable);
         doubleClickTransitBetweenTables(ExistingStopsTable, stopsOnRouteTable);
-        doubleClickTransitBetweenTables(driversOnRouteTable, ExistingDriversTable);
+        doubleClickTransitBetweenTablesWithTwoColumns(driversOnRouteTable, ExistingDriversTable);
         doubleClickTransitBetweenTables(stopsOnRouteTable, ExistingStopsTable);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         addNewStopButton.addActionListener(new ActionListener() {
@@ -68,7 +73,7 @@ public class ChangeForm extends JDialog {
                     addRouteToTable();
                     setVisible(false);
                     dispose();
-                } catch (IllegalDataException ex) {
+                } catch (IllegalDataException | SQLException ex) {
                     JOptionPane.showMessageDialog(null, ex.getMessage());
                 }
             }
@@ -88,8 +93,8 @@ public class ChangeForm extends JDialog {
         logger.info("UI загружен");
     }
 
-    private void addRouteToTable() {
-
+    private void addRouteToTable() throws SQLException {
+        int id = Integer.parseInt(idField.getText());
         for (int i = 0; i < driversOnRouteTable.getRowCount(); i++) {
             int driver_id = (Integer) driversOnRouteTable.getValueAt(i, 0); ///???
             currentDriversIDs.add(driver_id);
@@ -101,7 +106,9 @@ public class ChangeForm extends JDialog {
         Format formatter = new SimpleDateFormat("HH.mm");
         String startTime = formatter.format((Date) StartTimeSpinner.getValue());
         String endTime = formatter.format((Date) EndTimeSpinner.getValue());
-        singleton.addRoute(new Route(currentDriversIDs, currentStops, startTime + " - " + endTime));
+        Route newRoute = new Route(currentDriversIDs, currentStops, startTime + " - " + endTime);
+        dbClass.insertRoute(newRoute, id);
+        singleton.addRoute(newRoute, id);
         // TODO: add to db
 
 
@@ -120,6 +127,10 @@ public class ChangeForm extends JDialog {
             throw new IllegalDataException("Добаьте хотя бы 1 водителя");
         if (stopsOnRouteTable.getRowCount() < 2)
             throw new IllegalDataException("Добаьте хотя бы 2 остановки");
+        int id = Integer.parseInt(idField.getText());
+        if (singleton.getAllRoutesID().contains(id)) {
+            throw new IllegalDataException("Такой id уже есть");
+        }
         Date start = (Date) StartTimeSpinner.getValue();
         Date end = (Date) EndTimeSpinner.getValue();
         if (start.after(end))
@@ -146,25 +157,46 @@ public class ChangeForm extends JDialog {
 
     }
 
-    private void addNewDriver() {
+    private void doubleClickTransitBetweenTablesWithTwoColumns(JTable src, JTable dst) {
+        src.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2 && !e.isConsumed()) {
+                    Point point = e.getPoint();
+                    int row = src.rowAtPoint(point);
+                    Integer id = (Integer) src.getValueAt(row, 0);
+                    String info = (String) src.getValueAt(row, 1);
+                    DefaultTableModel dst_model = (DefaultTableModel) dst.getModel();
+                    DefaultTableModel src_model = (DefaultTableModel) src.getModel();
+                    dst_model.addRow(new Object[]{id, info});
+                    dst_model.fireTableDataChanged();
+                    src_model.removeRow(row);
+                }
+            }
+        });
 
+    }
+
+    private void addNewDriver() {
         DriverForm driverForm = new DriverForm();
         driverForm.setVisible(true);
 //        Проверка на изменения
         int tmpID = driverForm.getNewDriverID();
         if (tmpID != -1) {
             DefaultTableModel model = (DefaultTableModel) ExistingDriversTable.getModel();
-            model.addRow(new Object[]{singleton.getDriverByKey(tmpID).getFIO()});
+            model.addRow(new Object[]{tmpID, singleton.getDriverByKey(tmpID).getFIO()});
             model.fireTableDataChanged();
             logger.info("Новый водитель успешно добавлен");
         }
     }
 
-    private Object[][] getALLDriversFIOAsArrays() {
-        Object[][] result = new Object[singleton.getDriverSize()][1];
+    private Object[][] driversDataToTable() {
+        ArrayList<Integer> freeDriversID = dbClass.getFreeDrivers();
+        Object[][] result = new Object[freeDriversID.size()][2];
         int i = 0;
-        for (int t : singleton.getAllDriversID()) {
-            result[i][0] = singleton.getDriverByKey(t).getFIO();
+        for (int t : freeDriversID) {
+            result[i][0] = t;
+            result[i][1] = singleton.getDriverByKey(t).getFIO();
             i++;
         }
         return result;
@@ -183,7 +215,7 @@ public class ChangeForm extends JDialog {
 
     private void initTables() {
 
-        var driveModel = new DefaultTableModel(getALLDriversFIOAsArrays(), new String[]{"Все Водители"}) {
+        var driveModel = new DefaultTableModel(driversDataToTable(), new String[]{"id", "Все Водители"}) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
@@ -199,7 +231,7 @@ public class ChangeForm extends JDialog {
         };
         ExistingStopsTable = new JTable(stopsModel);
 
-        var driveModel_1 = new DefaultTableModel(null, new String[]{"Водители на маршруте"}) {
+        var driveModel_1 = new DefaultTableModel(null, new String[]{"id", "Водители на маршруте"}) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
@@ -225,43 +257,48 @@ public class ChangeForm extends JDialog {
     private void $$$setupUI$$$() {
         createUIComponents();
         rootPanel = new JPanel();
-        rootPanel.setLayout(new GridLayoutManager(8, 4, new Insets(0, 0, 0, 0), -1, -1));
+        rootPanel.setLayout(new GridLayoutManager(8, 5, new Insets(0, 0, 0, 0), -1, -1));
         scrollPanel1 = new JScrollPane();
-        rootPanel.add(scrollPanel1, new GridConstraints(2, 1, 4, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(303, 427), null, 0, false));
+        rootPanel.add(scrollPanel1, new GridConstraints(2, 2, 4, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(303, 427), null, 0, false));
         scrollPanel1.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(new Color(-4473925)), null));
         scrollPanel1.setViewportView(driversOnRouteTable);
         final JScrollPane scrollPane1 = new JScrollPane();
-        rootPanel.add(scrollPane1, new GridConstraints(2, 0, 4, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(608, 427), null, 0, false));
+        rootPanel.add(scrollPane1, new GridConstraints(2, 0, 4, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(608, 427), null, 0, false));
         scrollPane1.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(new Color(-4473925)), null));
         scrollPane1.setViewportView(ExistingDriversTable);
         final JScrollPane scrollPane2 = new JScrollPane();
-        rootPanel.add(scrollPane2, new GridConstraints(2, 2, 4, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        rootPanel.add(scrollPane2, new GridConstraints(2, 3, 4, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         ExistingStopsTable.setAutoCreateRowSorter(false);
         scrollPane2.setViewportView(ExistingStopsTable);
         final JScrollPane scrollPane3 = new JScrollPane();
-        rootPanel.add(scrollPane3, new GridConstraints(2, 3, 4, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        rootPanel.add(scrollPane3, new GridConstraints(2, 4, 4, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         stopsOnRouteTable.setAutoCreateRowSorter(false);
         scrollPane3.setViewportView(stopsOnRouteTable);
         addNewDriverButton = new JButton();
         addNewDriverButton.setText("Добавить");
         addNewDriverButton.setToolTipText("Добавть нового водителя");
-        rootPanel.add(addNewDriverButton, new GridConstraints(6, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        rootPanel.add(addNewDriverButton, new GridConstraints(6, 0, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         addNewStopButton = new JButton();
         addNewStopButton.setText("Добавить");
         addNewStopButton.setToolTipText("Добавть новую остановку");
-        rootPanel.add(addNewStopButton, new GridConstraints(6, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        rootPanel.add(addNewStopButton, new GridConstraints(6, 3, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final Spacer spacer1 = new Spacer();
-        rootPanel.add(spacer1, new GridConstraints(7, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        rootPanel.add(spacer1, new GridConstraints(7, 3, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         okButton = new JButton();
         okButton.setText("Ok");
-        rootPanel.add(okButton, new GridConstraints(7, 3, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        rootPanel.add(okButton, new GridConstraints(7, 4, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final Spacer spacer2 = new Spacer();
-        rootPanel.add(spacer2, new GridConstraints(1, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        rootPanel.add(spacer2, new GridConstraints(1, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         final JPanel panel1 = new JPanel();
         panel1.setLayout(new BorderLayout(0, 0));
-        rootPanel.add(panel1, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+        rootPanel.add(panel1, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         panel1.add(StartTimeSpinner, BorderLayout.WEST);
         panel1.add(EndTimeSpinner, BorderLayout.EAST);
+        final JLabel label1 = new JLabel();
+        label1.setText("Номер маршрута");
+        rootPanel.add(label1, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        idField.setText("0");
+        rootPanel.add(idField, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
     }
 
     /**
@@ -282,6 +319,15 @@ public class ChangeForm extends JDialog {
         model1.setValue(calendar.getTime());
         StartTimeSpinner = new JSpinner(model);
         EndTimeSpinner = new JSpinner(model1);
+        NumberFormat format = NumberFormat.getInstance();
+        NumberFormatter formatter = new NumberFormatter(format);
+        formatter.setValueClass(Integer.class);
+        formatter.setMinimum(0);
+        formatter.setMaximum(Integer.MAX_VALUE);
+        formatter.setAllowsInvalid(false);
+        // If you want the value to be committed on each keystroke instead of focus lost
+        formatter.setCommitsOnValidEdit(true);
+        idField = new JFormattedTextField(formatter);
         initTables();
     }
 }
