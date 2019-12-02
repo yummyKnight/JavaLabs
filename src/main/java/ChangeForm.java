@@ -1,7 +1,6 @@
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
-import org.jdesktop.el.Expression;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,6 +16,7 @@ import java.awt.event.MouseEvent;
 import java.sql.SQLException;
 import java.text.Format;
 import java.text.NumberFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -39,8 +39,10 @@ public class ChangeForm extends JDialog {
     private DataSingleton singleton = DataSingleton.getInstance();
     private HashSet<Integer> currentDriversIDs = new HashSet<>();
     private ArrayList<String> currentStops = new ArrayList<>();
+    private int modifiableID; // -1 open form for data enrty
 
-    ChangeForm() {
+    ChangeForm(int modifiableID) {
+        this.modifiableID = modifiableID;
         $$$setupUI$$$();
         setContentPane(rootPanel);
         setModal(true);
@@ -70,7 +72,11 @@ public class ChangeForm extends JDialog {
                 // adding route
                 try {
                     validateData();
-                    addRouteToTable();
+                    if (modifiableID == -1) {
+                        addRouteToTable();
+                    } else {
+                        changeRoute();
+                    }
                     setVisible(false);
                     dispose();
                 } catch (IllegalDataException | SQLException ex) {
@@ -109,13 +115,45 @@ public class ChangeForm extends JDialog {
         Route newRoute = new Route(currentDriversIDs, currentStops, startTime + " - " + endTime);
         dbClass.insertRoute(newRoute, id);
         singleton.addRoute(newRoute, id);
-        // TODO: add to db
-
 
     }
 
+    private void changeRoute() throws SQLException {
+        Route changingRoute = singleton.getRouteByKey(modifiableID);
+
+        for (int i = 0; i < driversOnRouteTable.getRowCount(); i++) {
+            int driver_id = (Integer) driversOnRouteTable.getValueAt(i, 0);
+            currentDriversIDs.add(driver_id);
+        }
+        for (int i = 0; i < stopsOnRouteTable.getRowCount(); i++) {
+            String stop = (String) stopsOnRouteTable.getValueAt(i, 0);
+            currentStops.add(stop);
+        }
+        Format formatter = new SimpleDateFormat("HH.mm");
+        String startTime = formatter.format((Date) StartTimeSpinner.getValue());
+        String endTime = formatter.format((Date) EndTimeSpinner.getValue());
+        // set time
+        changingRoute.setTime(startTime + " - " + endTime);
+        // set stops
+        if (!currentStops.equals(changingRoute.getStops())) {
+            changingRoute.setStops(currentStops);
+        }
+        // set drivers
+        if (!currentDriversIDs.equals(changingRoute.getDrivers_ids())) {
+            changingRoute.setDrivers_ids(currentDriversIDs);
+        }
+        int id = Integer.parseInt(idField.getText());
+
+        if (id != modifiableID) {
+            singleton.changeKeyRouteMap(modifiableID, id);
+        }
+        // db update
+        dbClass.updateRoute(changingRoute, modifiableID, id);
+    }
+
+
     public static void main(String[] args) {
-        ChangeForm dialog = new ChangeForm();
+        ChangeForm dialog = new ChangeForm(-1);
         //dialog.getContentPane().setPreferredSize(new Dimension(500, 1000));
         dialog.pack();
         dialog.setVisible(true);
@@ -128,7 +166,7 @@ public class ChangeForm extends JDialog {
         if (stopsOnRouteTable.getRowCount() < 2)
             throw new IllegalDataException("Добаьте хотя бы 2 остановки");
         int id = Integer.parseInt(idField.getText());
-        if (singleton.getAllRoutesID().contains(id)) {
+        if (id != modifiableID && singleton.getAllRoutesID().contains(id)) {
             throw new IllegalDataException("Такой id уже есть");
         }
         Date start = (Date) StartTimeSpinner.getValue();
@@ -190,8 +228,23 @@ public class ChangeForm extends JDialog {
         }
     }
 
+    private Object[][] setDriversOnRouteTable() {
+        if (modifiableID != -1) {
+            HashSet<Integer> DriversID = singleton.getRouteByKey(modifiableID).getDrivers_ids();
+            Object[][] result = new Object[DriversID.size()][2];
+            int i = 0;
+            for (int t : DriversID) {
+                result[i][0] = t;
+                result[i][1] = singleton.getDriverByKey(t).getFIO();
+                i++;
+            }
+            return result;
+        }
+        return null;
+    }
+
     private Object[][] driversDataToTable() {
-        ArrayList<Integer> freeDriversID = dbClass.getFreeDrivers();
+        HashSet<Integer> freeDriversID = singleton.getFreeDrivers();
         Object[][] result = new Object[freeDriversID.size()][2];
         int i = 0;
         for (int t : freeDriversID) {
@@ -202,8 +255,11 @@ public class ChangeForm extends JDialog {
         return result;
     }
 
-    private Object[][] getALLStops() {
+    private Object[][] setExistingStopsTable() {
         HashSet<String> tmp = singleton.getAllStops();
+        if (modifiableID != -1) {
+            tmp.removeAll(singleton.getRouteByKey(modifiableID).getStops());
+        }
         Object[][] result = new Object[tmp.size()][1];
         int i = 0;
         for (String stop : tmp) {
@@ -211,6 +267,13 @@ public class ChangeForm extends JDialog {
             i++;
         }
         return result;
+    }
+
+    private Object[][] setStopsOnRouteTable() {
+        if (modifiableID != -1) {
+            return singleton.getRouteByKey(modifiableID).getStopsAs2DArray();
+        }
+        return null;
     }
 
     private void initTables() {
@@ -223,7 +286,7 @@ public class ChangeForm extends JDialog {
         };
         ExistingDriversTable = new JTable(driveModel);
 
-        var stopsModel = new DefaultTableModel(getALLStops(), new String[]{"Остановки"}) {
+        var stopsModel = new DefaultTableModel(setExistingStopsTable(), new String[]{"Остановки"}) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
@@ -231,20 +294,63 @@ public class ChangeForm extends JDialog {
         };
         ExistingStopsTable = new JTable(stopsModel);
 
-        var driveModel_1 = new DefaultTableModel(null, new String[]{"id", "Водители на маршруте"}) {
+        var driveModel_1 = new DefaultTableModel(setDriversOnRouteTable(), new String[]{"id", "Водители на маршруте"}) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
             }
         };
         driversOnRouteTable = new JTable(driveModel_1);
-        var stopsModel_1 = new DefaultTableModel(null, new String[]{"Остановки на маршруте"}) {
+        var stopsModel_1 = new DefaultTableModel(setStopsOnRouteTable(), new String[]{"Остановки на маршруте"}) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
             }
         };
         stopsOnRouteTable = new JTable(stopsModel_1);
+    }
+
+    private void setTimeSpinners() throws ParseException {
+        SpinnerDateModel model = new SpinnerDateModel();
+        SpinnerDateModel model1 = new SpinnerDateModel();
+        if (modifiableID != -1) {
+            String dates_raw = singleton.getRouteByKey(modifiableID).getTime();
+            String dateS = dates_raw.split("-")[0].strip();
+            String dateF = dates_raw.split("-")[1].strip();
+            Format formatter = new SimpleDateFormat("HH.mm");
+            Date startTime = (Date) formatter.parseObject(dateS);
+            Date endTime = (Date) formatter.parseObject(dateF);
+            model.setValue(startTime);
+            model1.setValue(endTime);
+        } else {
+            Calendar calendar = Calendar.getInstance();
+            calendar.set(Calendar.HOUR_OF_DAY, 24); // 24 == 12 PM == 00:00:00
+            calendar.set(Calendar.MINUTE, 0);
+            calendar.set(Calendar.SECOND, 0);
+            model.setValue(calendar.getTime());
+            model1.setValue(calendar.getTime());
+        }
+        StartTimeSpinner = new JSpinner(model);
+        EndTimeSpinner = new JSpinner(model1);
+
+    }
+
+    private void setIdField() {
+        NumberFormat format = NumberFormat.getInstance();
+        NumberFormatter formatter = new NumberFormatter(format);
+        formatter.setValueClass(Integer.class);
+        formatter.setMinimum(0);
+        formatter.setMaximum(Integer.MAX_VALUE);
+        formatter.setAllowsInvalid(false);
+        // If you want the value to be committed on each keystroke instead of focus lost
+        formatter.setCommitsOnValidEdit(true);
+        idField = new JFormattedTextField(formatter);
+
+        if (modifiableID != -1) {
+            idField.setText(Integer.toString(modifiableID));
+        } else {
+            idField.setText("0");
+        }
     }
 
     /**
@@ -297,7 +403,7 @@ public class ChangeForm extends JDialog {
         final JLabel label1 = new JLabel();
         label1.setText("Номер маршрута");
         rootPanel.add(label1, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        idField.setText("0");
+        idField.setText("");
         rootPanel.add(idField, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
     }
 
@@ -309,25 +415,12 @@ public class ChangeForm extends JDialog {
     }
 
     private void createUIComponents() {
-        Calendar calendar = Calendar.getInstance();
-        calendar.set(Calendar.HOUR_OF_DAY, 24); // 24 == 12 PM == 00:00:00
-        calendar.set(Calendar.MINUTE, 0);
-        calendar.set(Calendar.SECOND, 0);
-        SpinnerDateModel model = new SpinnerDateModel();
-        model.setValue(calendar.getTime());
-        SpinnerDateModel model1 = new SpinnerDateModel();
-        model1.setValue(calendar.getTime());
-        StartTimeSpinner = new JSpinner(model);
-        EndTimeSpinner = new JSpinner(model1);
-        NumberFormat format = NumberFormat.getInstance();
-        NumberFormatter formatter = new NumberFormatter(format);
-        formatter.setValueClass(Integer.class);
-        formatter.setMinimum(0);
-        formatter.setMaximum(Integer.MAX_VALUE);
-        formatter.setAllowsInvalid(false);
-        // If you want the value to be committed on each keystroke instead of focus lost
-        formatter.setCommitsOnValidEdit(true);
-        idField = new JFormattedTextField(formatter);
+        try {
+            setTimeSpinners();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        setIdField();
         initTables();
     }
 }

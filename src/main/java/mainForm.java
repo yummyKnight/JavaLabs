@@ -88,19 +88,22 @@ public class mainForm extends JDialog {
         setModal(true);
         // Listeners:
         routeButton.addActionListener(e -> addNewRout());
-
+        // editing
         mainTable.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() == 2 && !e.isConsumed()) {
-                    JOptionPane.showMessageDialog(null, "Проверка нажатия на кнопку");
+//                    JOptionPane.showMessageDialog(null, "Проверка нажатия на кнопку");
                     Point point = e.getPoint();
                     int row = mainTable.rowAtPoint(point);
-                    System.out.println(row);
+                    int id = (int) mainTable.getValueAt(row, 0);
+                    ChangeForm form1 = new ChangeForm(id);
+                    form1.setVisible(true);
+                    updateTable();
                 }
             }
         });
-
+        // search
         searchField.getDocument().addDocumentListener(new DocumentListener() {
             @Override
             public void insertUpdate(DocumentEvent e) {
@@ -174,7 +177,7 @@ public class mainForm extends JDialog {
 
 
     private void addNewRout() {
-        ChangeForm form1 = new ChangeForm();
+        ChangeForm form1 = new ChangeForm(-1);
         form1.setVisible(true);
         updateTable();
     }

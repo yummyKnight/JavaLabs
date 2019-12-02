@@ -64,12 +64,17 @@ public class dbClass {
     }
 
     static void updateRoute(Route route, int oldID, int newID) throws SQLException {
-        // upd all or by parts?
-        if (oldID != newID){
-            String updSQL = "UPDATE Drivers SET route_id = ? WHERE route_id = ?";
-            PreparedStatement pstmt1 = conn.prepareStatement(updSQL);
+        // null all prev
+        String updSQL = "UPDATE Drivers SET route_id = null WHERE route_id = ?";
+        PreparedStatement pstmt1 = conn.prepareStatement(updSQL);
+        pstmt1.setInt(1,oldID);
+        pstmt1.executeUpdate();
+        // set new id
+        for (int id : route.getDrivers_ids()){
+            updSQL = "UPDATE Drivers SET route_id = ? WHERE id = ?";
+            pstmt1 = conn.prepareStatement(updSQL);
             pstmt1.setInt(1,newID);
-            pstmt1.setInt(2,oldID);
+            pstmt1.setInt(2,id);
             pstmt1.executeUpdate();
         }
 

@@ -65,7 +65,8 @@ public class Route {
         }
         return joiner.toString();
     }
-     Object[][] getStopsArrays() {
+
+     Object[][] getStopsAs2DArray() {
         Object[][] result = new Object[stops.size()][1];
         int i = 0;
         for (String stop : stops) {
@@ -75,7 +76,19 @@ public class Route {
         return result;
     }
 
-     String displayShortRoute() {
+    public void setDrivers_ids(HashSet<Integer> drivers_ids) {
+        this.drivers_ids = new HashSet<>(drivers_ids);
+    }
+
+    public void setStops(ArrayList<String> stops) {
+        this.stops = new ArrayList<>(stops);
+    }
+
+    ArrayList<String> getStops() {
+        return stops;
+    }
+
+    String displayShortRoute() {
         return stops.get(0) + " -- " + stops.get(stops.size() - 1);
     }
 

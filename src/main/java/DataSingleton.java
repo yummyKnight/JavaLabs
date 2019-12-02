@@ -1,4 +1,3 @@
-import java.lang.reflect.Array;
 import java.util.*;
 
 class DataSingleton {
@@ -43,13 +42,25 @@ class DataSingleton {
         }
         return twin;
     }
-
+    void changeKeyRouteMap(int key, int newKey){
+        Route t = allRouts.remove(key);
+        allRouts.put(newKey, t);
+    }
     String driversToString(Route route) {
         StringJoiner joiner = new StringJoiner(",");
         for (int i : route.getDrivers_ids()) {
             joiner.add(getDriverByKey(i).getFIO());
         }
         return joiner.toString();
+    }
+    // not work!!!
+    HashSet<Integer> getFreeDrivers(){
+        HashSet<Integer> tmp = new HashSet<>();
+        for (Route route : allRouts.values()) {
+            tmp.addAll(route.getDrivers_ids());
+        }
+        tmp.removeAll(allDrivers.keySet());
+        return tmp;
     }
 
     int getDriverSize() {
@@ -69,20 +80,18 @@ class DataSingleton {
     }
 
     void setAllDrivers(HashMap<Integer, Driver> allDrivers) {
-        this.allDrivers = allDrivers;
+        this.allDrivers = new HashMap<>(allDrivers);
     }
 
      void setAllRouts(HashMap<Integer, Route> allRouts) {
-        this.allRouts = allRouts;
+
+        this.allRouts = new HashMap<>(allRouts);
     }
 
     HashSet<String> getAllStops() {
         HashSet<String> tmp = new HashSet<>();
         for (Route route : allRouts.values()) {
-            Object[][] t = route.getStopsArrays();
-            for (Object[] objects : t) {
-                tmp.add((String) objects[0]);
-            }
+            tmp.addAll(route.getStops());
         }
         return tmp;
     }
