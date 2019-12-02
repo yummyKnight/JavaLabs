@@ -47,7 +47,7 @@ public class dbClass {
     }
     static void insertRoute(Route route, int route_id) throws SQLException
     {
-        String sql = "INSERT INTO 'Route' ('id','stops','time')" + " VALUES (?,?,?)";
+        String sql = "INSERT INTO Route ('id','stops','time')" + " VALUES (?,?,?)";
         PreparedStatement pstmt = conn.prepareStatement(sql);
         pstmt.setInt(1, route_id);
         pstmt.setString(2, route.stopsToString());
@@ -61,6 +61,61 @@ public class dbClass {
         }
         pstmt.executeUpdate();
         System.out.println("Таблица заполнена");
+    }
+
+    static void updateRoute(Route route, int oldID, int newID) throws SQLException {
+        // upd all or by parts?
+        if (oldID != newID){
+            String updSQL = "UPDATE Drivers SET route_id = ? WHERE route_id = ?";
+            PreparedStatement pstmt1 = conn.prepareStatement(updSQL);
+            pstmt1.setInt(1,newID);
+            pstmt1.setInt(2,oldID);
+            pstmt1.executeUpdate();
+        }
+
+        String sql = "UPDATE Route SET id = ?, stops = ?, time = ? WHERE id = ?";
+        PreparedStatement pstmt = conn.prepareStatement(sql);
+        pstmt.setInt(1, newID);
+        pstmt.setString(2, route.stopsToString());
+        pstmt.setString(3, route.getTime());
+        pstmt.setInt(3, oldID);
+
+    }
+    static void updateDriver(Driver driver, int driver_id) throws SQLException {
+
+        String sql = "UPDATE Drivers SET exp = ?, class = ?, FIO = ? WHERE id = ?";
+        PreparedStatement pstmt = conn.prepareStatement(sql);
+        pstmt.setDouble(1, driver.getExperience());
+        pstmt.setString(2, driver.getClassification());
+        pstmt.setString(3, driver.getFIO());
+        pstmt.setInt(4, driver_id);
+        pstmt.executeUpdate();
+        if (driver.getViolations() != null){
+            // TODO: can i make viol == null in form???
+            sql = "UPDATE Drivers SET viol = ? WHERE id = ?";
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1,driver.getViolations());
+            pstmt.setInt(2, driver_id);
+        }
+
+    }
+
+    static void deleteRoute(int route_id) throws SQLException {
+        String sql = "DELETE FROM Route WHERE id = ?";
+        PreparedStatement pstmt = conn.prepareStatement(sql);
+        pstmt.setInt(1, route_id);
+        pstmt.execute();
+        String sqlUPD = "UPDATE Drivers SET route_id = null WHERE route_id = ?";
+        PreparedStatement pstupd = conn.prepareStatement(sqlUPD);
+        pstupd.setInt(1, route_id);
+        pstupd.execute();
+    }
+
+    static void deleteDriver(int driver_id) throws SQLException {
+        String sql = "DELETE FROM Drivers WHERE id = ?";
+        PreparedStatement pstmt = conn.prepareStatement(sql);
+        pstmt.setInt(1, driver_id);
+
     }
     static ArrayList<Integer> getFreeDrivers() {
         ArrayList<Integer> res = null;
