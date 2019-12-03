@@ -15,6 +15,8 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.StringJoiner;
 import java.util.regex.PatternSyntaxException;
 
 public class mainForm extends JDialog {
@@ -38,14 +40,11 @@ public class mainForm extends JDialog {
     private TableRowSorter<TableModel> rowSorter;
     private String[] header = new String[]{"ID", "Водители", "Маршрут", "График"};
     private String test = "ул. Пупкина, ул. Мохнатова, ул. Стремина";
-    private DataSingleton singleton = DataSingleton.getInstance();
 
     private void createData() {
         try {
             dbClass.Conn();
-            singleton.setAllDrivers(dbClass.ReadDriversBD());
-            singleton.setAllRouts(dbClass.ReadRouteBD());
-        } catch (SQLException | ClassNotFoundException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
         logger.debug("Начальные данные загружены");
@@ -65,19 +64,28 @@ public class mainForm extends JDialog {
     }
 
     private Object[][] createTableData() {
-        Object[][] result = new Object[singleton.getRoutesSize()][4];
-        int i = 0;
-        for (int route_id : singleton.getAllRoutesID()) {
-            Route route = singleton.getRouteByKey(route_id);
-            result[i][0] = route_id;
-            result[i][1] = singleton.driversToString(route);
-            result[i][2] = route.displayShortRoute();
-            result[i][3] = route.getTime();
-            i++;
+        try {
+            HashMap<Integer, Route> data = dbClass.ReadRouteBD();
+            Object[][] result = new Object[data.size()][4];
+            int i = 0;
+            for (int route_id : data.keySet()) {
+                Route route = data.get(route_id);
+                result[i][0] = route_id;
+                StringJoiner joiner = new StringJoiner(",");
+                for (String name : dbClass.getDriversOnRoute(route_id).values()) {
+                    joiner.add(name);
+                }
+                result[i][1] = joiner.toString();
+                result[i][2] = route.displayShortRoute();
+                result[i][3] = route.getTime();
+                i++;
+            }
+            return result;
+        } catch (SQLException e) {
+            logger.error(e.getMessage());
         }
-        logger.debug("Данные из singleton.allRouts загружены");
-        return result;
-
+        logger.debug("Данные успешно загружены");
+        return null;
     }
 
     private mainForm() {
@@ -127,13 +135,8 @@ public class mainForm extends JDialog {
 //                    saveData();
 //                    XMLWrapper.writeXML(mainTable, "table.xml");
 //                    CustomThreads.doExperiment(mainTable);
-                try {
-                    dbClass.commitChanges();
-                    JOptionPane.showMessageDialog(null, "Данные успешно записаны");
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-//                } catch (IOException | TransformerException | ParserConfigurationException ex) {
+                JOptionPane.showMessageDialog(null, "Данные успешно записаны");
+                //                } catch (IOException | TransformerException | ParserConfigurationException ex) {
 //                    JOptionPane.showMessageDialog(null, "Ошибка записи!!!");
 //                }
             }
@@ -301,10 +304,10 @@ public class mainForm extends JDialog {
         subPanel.setLayout(new BorderLayout(0, 0));
         contentPane.add(subPanel, BorderLayout.SOUTH);
         routeButton = new JButton();
-        routeButton.setText("Button");
+        routeButton.setText("Добавить новый маршрут");
         subPanel.add(routeButton, BorderLayout.WEST);
         driverButton = new JButton();
-        driverButton.setText("Button");
+        driverButton.setText("Просмотр списка водителей");
         subPanel.add(driverButton, BorderLayout.EAST);
         mainScrollPanel = new JScrollPane();
         mainScrollPanel.setHorizontalScrollBarPolicy(31);

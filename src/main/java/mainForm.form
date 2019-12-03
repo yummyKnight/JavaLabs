@@ -96,13 +96,13 @@
           <component id="7e03e" class="javax.swing.JButton" binding="routeButton">
             <constraints border-constraint="West"/>
             <properties>
-              <text value="Button"/>
+              <text value="Добавить новый маршрут"/>
             </properties>
           </component>
           <component id="49534" class="javax.swing.JButton" binding="driverButton">
             <constraints border-constraint="East"/>
             <properties>
-              <text value="Button"/>
+              <text value="Просмотр списка водителей"/>
             </properties>
           </component>
         </children>

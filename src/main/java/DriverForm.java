@@ -21,7 +21,6 @@ public class DriverForm extends JDialog {
     private JTextArea ViolationTextArea;
     private Pattern namePattern = Pattern.compile("([a-zA-Zа-яА-Я]+ [a-zA-Zа-яА-Я]+( [a-zA-Zа-яА-Я]+)?)");
     private Pattern expPattern = Pattern.compile("\\d?\\d\\.\\d");
-    private DataSingleton singleton = DataSingleton.getInstance();
     // in db driver id always > 0
     private int newDriverID = -1;
 
@@ -46,8 +45,6 @@ public class DriverForm extends JDialog {
                         newDriver.setViolations(ViolationTextArea.getText());
                     }
                     newDriverID = dbClass.insertDriver(newDriver);
-                    singleton.addDriver(newDriver, newDriverID);
-
                     setVisible(false);
                     dispose();
                 } catch (IllegalDataException | SQLException ex) {
@@ -63,9 +60,6 @@ public class DriverForm extends JDialog {
         if (!Pattern.matches(expPattern.pattern(), ExpField.getText()))
             throw new IllegalDataException("Неправильно введен опыт работы");
         // нужно ли?
-        if (singleton.isTwin(NameField.getText())) {
-            throw new IllegalDataException("Такое имя уже есть в таблице");
-        }
     }
 
     public static void main(String[] args) {

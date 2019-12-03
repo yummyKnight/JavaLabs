@@ -8,42 +8,18 @@ public class Route {
     private ArrayList<String> stops;
     private String time;
 
-    public Route() {
-    }
-
     public Route(HashSet<Integer> drivers_ids, ArrayList<String> stops, String time) {
         this.drivers_ids = drivers_ids;
         this.stops = stops;
         this.time = time;
     }
 
-    public void addDriver(int driver_id) {
-        drivers_ids.add(driver_id);
-    }
-
-    public void addStop(String stop) {
-        stops.add(stop);
-    }
-
 //    public void removeDriver(Driver driver) {
 //        drivers_ids.remove(driver);
 //    }
 
-    public void removeStop(String stop) {
-        stops.remove(stop);
-    }
-
      String getTime() {
         return time;
-    }
-
-
-    public String stopsToString() {
-        StringJoiner joiner = new StringJoiner(",");
-        for (String stop : stops) {
-            joiner.add(stop);
-        }
-        return joiner.toString();
     }
 
      HashSet<Integer> getDrivers_ids() {
@@ -58,30 +34,35 @@ public class Route {
 //        }
 //        return result;
 //    }
-    String driversToString(Route route) {
-        StringJoiner joiner = new StringJoiner(",");
-        for (String i : stops) {
-            joiner.add(i);
-        }
-        return joiner.toString();
-    }
+//    String driversToString(Route route) {
+//        StringJoiner joiner = new StringJoiner(",");
+//        for (String i : stops) {
+//            joiner.add(i);
+//        }
+//        return joiner.toString();
+//    }
+//
+//     Object[][] getStopsAs2DArray() {
+//        Object[][] result = new Object[stops.size()][1];
+//        int i = 0;
+//        for (String stop : stops) {
+//            result[i][0] = stop;
+//            i++;
+//        }
+//        return result;
+//    }
 
-     Object[][] getStopsAs2DArray() {
-        Object[][] result = new Object[stops.size()][1];
-        int i = 0;
-        for (String stop : stops) {
-            result[i][0] = stop;
-            i++;
-        }
-        return result;
-    }
 
     public void setDrivers_ids(HashSet<Integer> drivers_ids) {
-        this.drivers_ids = new HashSet<>(drivers_ids);
+        this.drivers_ids = drivers_ids;
     }
 
     public void setStops(ArrayList<String> stops) {
-        this.stops = new ArrayList<>(stops);
+        this.stops = stops;
+    }
+
+    public void setTime(String time) {
+        this.time = time;
     }
 
     ArrayList<String> getStops() {
@@ -92,7 +73,4 @@ public class Route {
         return stops.get(0) + " -- " + stops.get(stops.size() - 1);
     }
 
-    public void setTime(String time) {
-        this.time = time;
-    }
 }

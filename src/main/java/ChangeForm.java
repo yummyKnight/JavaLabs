@@ -36,7 +36,6 @@ public class ChangeForm extends JDialog {
     private JSpinner StartTimeSpinner;
     private JSpinner EndTimeSpinner;
     private JFormattedTextField idField;
-    private DataSingleton singleton = DataSingleton.getInstance();
     private HashSet<Integer> currentDriversIDs = new HashSet<>();
     private ArrayList<String> currentStops = new ArrayList<>();
     private int modifiableID; // -1 open form for data enrty
@@ -47,7 +46,13 @@ public class ChangeForm extends JDialog {
         setContentPane(rootPanel);
         setModal(true);
         setSize(new Dimension(1000, 500));
-        addNewDriverButton.addActionListener(e -> addNewDriver());
+        addNewDriverButton.addActionListener(e -> {
+            try {
+                addNewDriver();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        });
         doubleClickTransitBetweenTablesWithTwoColumns(ExistingDriversTable, driversOnRouteTable);
         doubleClickTransitBetweenTables(ExistingStopsTable, stopsOnRouteTable);
         doubleClickTransitBetweenTablesWithTwoColumns(driversOnRouteTable, ExistingDriversTable);
@@ -60,6 +65,11 @@ public class ChangeForm extends JDialog {
                 if (stop != null && !stop.equals("")) {
                     DefaultTableModel model = (DefaultTableModel) ExistingStopsTable.getModel();
                     model.addRow(new Object[]{stop});
+                    try {
+                        dbClass.addNewStop(stop);
+                    } catch (SQLException ex) {
+                        ex.printStackTrace();
+                    }
                     model.fireTableDataChanged();
                     logger.debug("Новая остановка добавлена");
                 }
@@ -101,6 +111,11 @@ public class ChangeForm extends JDialog {
 
     private void addRouteToTable() throws SQLException {
         int id = Integer.parseInt(idField.getText());
+        dbClass.insertRoute(createRouteFromData(), id);
+
+    }
+
+    private Route createRouteFromData() {
         for (int i = 0; i < driversOnRouteTable.getRowCount(); i++) {
             int driver_id = (Integer) driversOnRouteTable.getValueAt(i, 0); ///???
             currentDriversIDs.add(driver_id);
@@ -112,43 +127,13 @@ public class ChangeForm extends JDialog {
         Format formatter = new SimpleDateFormat("HH.mm");
         String startTime = formatter.format((Date) StartTimeSpinner.getValue());
         String endTime = formatter.format((Date) EndTimeSpinner.getValue());
-        Route newRoute = new Route(currentDriversIDs, currentStops, startTime + " - " + endTime);
-        dbClass.insertRoute(newRoute, id);
-        singleton.addRoute(newRoute, id);
-
+        return new Route(currentDriversIDs, currentStops, startTime + " - " + endTime);
     }
 
     private void changeRoute() throws SQLException {
-        Route changingRoute = singleton.getRouteByKey(modifiableID);
-
-        for (int i = 0; i < driversOnRouteTable.getRowCount(); i++) {
-            int driver_id = (Integer) driversOnRouteTable.getValueAt(i, 0);
-            currentDriversIDs.add(driver_id);
-        }
-        for (int i = 0; i < stopsOnRouteTable.getRowCount(); i++) {
-            String stop = (String) stopsOnRouteTable.getValueAt(i, 0);
-            currentStops.add(stop);
-        }
-        Format formatter = new SimpleDateFormat("HH.mm");
-        String startTime = formatter.format((Date) StartTimeSpinner.getValue());
-        String endTime = formatter.format((Date) EndTimeSpinner.getValue());
-        // set time
-        changingRoute.setTime(startTime + " - " + endTime);
-        // set stops
-        if (!currentStops.equals(changingRoute.getStops())) {
-            changingRoute.setStops(currentStops);
-        }
-        // set drivers
-        if (!currentDriversIDs.equals(changingRoute.getDrivers_ids())) {
-            changingRoute.setDrivers_ids(currentDriversIDs);
-        }
         int id = Integer.parseInt(idField.getText());
-
-        if (id != modifiableID) {
-            singleton.changeKeyRouteMap(modifiableID, id);
-        }
         // db update
-        dbClass.updateRoute(changingRoute, modifiableID, id);
+        dbClass.updateRoute(createRouteFromData(), modifiableID, id);
     }
 
 
@@ -166,7 +151,7 @@ public class ChangeForm extends JDialog {
         if (stopsOnRouteTable.getRowCount() < 2)
             throw new IllegalDataException("Добаьте хотя бы 2 остановки");
         int id = Integer.parseInt(idField.getText());
-        if (id != modifiableID && singleton.getAllRoutesID().contains(id)) {
+        if (id != modifiableID && dbClass.getAllRoutesID().contains(id)) {
             throw new IllegalDataException("Такой id уже есть");
         }
         Date start = (Date) StartTimeSpinner.getValue();
@@ -215,27 +200,27 @@ public class ChangeForm extends JDialog {
 
     }
 
-    private void addNewDriver() {
+    private void addNewDriver() throws SQLException {
         DriverForm driverForm = new DriverForm();
         driverForm.setVisible(true);
 //        Проверка на изменения
         int tmpID = driverForm.getNewDriverID();
         if (tmpID != -1) {
             DefaultTableModel model = (DefaultTableModel) ExistingDriversTable.getModel();
-            model.addRow(new Object[]{tmpID, singleton.getDriverByKey(tmpID).getFIO()});
+            model.addRow(new Object[]{tmpID, dbClass.getDriverFIOByKey(tmpID)});
             model.fireTableDataChanged();
             logger.info("Новый водитель успешно добавлен");
         }
     }
 
-    private Object[][] setDriversOnRouteTable() {
+    private Object[][] setDriversOnRouteTable() throws SQLException {
         if (modifiableID != -1) {
-            HashSet<Integer> DriversID = singleton.getRouteByKey(modifiableID).getDrivers_ids();
+            HashMap<Integer, String> DriversID = dbClass.getDriversOnRoute(modifiableID);
             Object[][] result = new Object[DriversID.size()][2];
             int i = 0;
-            for (int t : DriversID) {
+            for (int t : DriversID.keySet()) {
                 result[i][0] = t;
-                result[i][1] = singleton.getDriverByKey(t).getFIO();
+                result[i][1] = DriversID.get(t);
                 i++;
             }
             return result;
@@ -243,22 +228,22 @@ public class ChangeForm extends JDialog {
         return null;
     }
 
-    private Object[][] driversDataToTable() {
-        HashSet<Integer> freeDriversID = singleton.getFreeDrivers();
+    private Object[][] driversDataToTable() throws SQLException {
+        HashMap<Integer, String> freeDriversID = dbClass.getFreeDrivers();
         Object[][] result = new Object[freeDriversID.size()][2];
         int i = 0;
-        for (int t : freeDriversID) {
+        for (int t : freeDriversID.keySet()) {
             result[i][0] = t;
-            result[i][1] = singleton.getDriverByKey(t).getFIO();
+            result[i][1] = freeDriversID.get(t);
             i++;
         }
         return result;
     }
 
-    private Object[][] setExistingStopsTable() {
-        HashSet<String> tmp = singleton.getAllStops();
+    private Object[][] setExistingStopsTable() throws SQLException {
+        ArrayList<String> tmp = dbClass.getAllStops();
         if (modifiableID != -1) {
-            tmp.removeAll(singleton.getRouteByKey(modifiableID).getStops());
+            tmp.removeAll(dbClass.getRouteStops(modifiableID));
         }
         Object[][] result = new Object[tmp.size()][1];
         int i = 0;
@@ -269,14 +254,27 @@ public class ChangeForm extends JDialog {
         return result;
     }
 
-    private Object[][] setStopsOnRouteTable() {
+    private Object[][] setStopsOnRouteTable() throws SQLException {
         if (modifiableID != -1) {
-            return singleton.getRouteByKey(modifiableID).getStopsAs2DArray();
+            return convertArrListTo2dArr(dbClass.getRouteStops(modifiableID));
         }
         return null;
     }
 
-    private void initTables() {
+    ///// utility
+    private Object[][] convertArrListTo2dArr(ArrayList<String> arrayList) {
+        Object[][] result = new Object[arrayList.size()][1];
+        int i = 0;
+        for (String stop : arrayList) {
+            result[i][0] = stop;
+            i++;
+        }
+        return result;
+    }
+
+    //////
+
+    private void initTables() throws SQLException {
 
         var driveModel = new DefaultTableModel(driversDataToTable(), new String[]{"id", "Все Водители"}) {
             @Override
@@ -310,11 +308,11 @@ public class ChangeForm extends JDialog {
         stopsOnRouteTable = new JTable(stopsModel_1);
     }
 
-    private void setTimeSpinners() throws ParseException {
+    private void setTimeSpinners() throws ParseException, SQLException {
         SpinnerDateModel model = new SpinnerDateModel();
         SpinnerDateModel model1 = new SpinnerDateModel();
         if (modifiableID != -1) {
-            String dates_raw = singleton.getRouteByKey(modifiableID).getTime();
+            String dates_raw = dbClass.getRouteTime(modifiableID);
             String dateS = dates_raw.split("-")[0].strip();
             String dateF = dates_raw.split("-")[1].strip();
             Format formatter = new SimpleDateFormat("HH.mm");
@@ -417,11 +415,12 @@ public class ChangeForm extends JDialog {
     private void createUIComponents() {
         try {
             setTimeSpinners();
-        } catch (ParseException e) {
+            setIdField();
+            initTables();
+        } catch (ParseException | SQLException e) {
             e.printStackTrace();
         }
-        setIdField();
-        initTables();
+
     }
 }
 
