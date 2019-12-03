@@ -105,20 +105,25 @@ public class dbClass {
     static void updateDriver(Driver driver, int driver_id) throws SQLException {
 
         String sql = "UPDATE Drivers SET exp = ?, class = ?, FIO = ? WHERE id = ?";
-        PreparedStatement pstmt = conn.prepareStatement(sql);
-        pstmt.setDouble(1, driver.getExperience());
-        pstmt.setString(2, driver.getClassification());
-        pstmt.setString(3, driver.getFIO());
-        pstmt.setInt(4, driver_id);
-        pstmt.executeUpdate();
-        pstmt.close();
-        if (driver.getViolations() != null) {
-            // TODO: can i make viol == null in form???
+        try {
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt.setDouble(1, driver.getExperience());
+            pstmt.setString(2, driver.getClassification());
+            pstmt.setString(3, driver.getFIO());
+            pstmt.setInt(4, driver_id);
+            pstmt.executeUpdate();
+            pstmt.close();
             sql = "UPDATE Drivers SET viol = ? WHERE id = ?";
             PreparedStatement pstmt1 = conn.prepareStatement(sql);
             pstmt1.setString(1, driver.getViolations());
             pstmt1.setInt(2, driver_id);
+            pstmt1.execute();
             pstmt1.close();
+
+            conn.commit();
+        } catch (SQLException e) {
+            conn.rollback();
+            throw e;
         }
 
     }
@@ -135,6 +140,8 @@ public class dbClass {
             pstupd.setInt(1, route_id);
             pstupd.execute();
             pstupd.close();
+            unLinkStopsToRoute(route_id);
+            conn.commit();
         } catch (SQLException e) {
             conn.rollback();
             throw e;
@@ -324,6 +331,22 @@ public class dbClass {
             try (ResultSet set = statement.executeQuery()) {
                 if (set.next()) {
                     res = set.getString("FIO");
+                }
+                return res;
+            }
+        }
+    }
+
+    static Driver getDriverByKey(int tmpID) throws SQLException {
+        Driver res = null;
+        String sql = " SELECT * FROM Drivers WHERE id = ?";
+        try (PreparedStatement statement = conn.prepareStatement(sql)) {
+            statement.setInt(1, tmpID);
+            try (ResultSet set = statement.executeQuery()) {
+                if (set.next()) {
+                    res = new Driver(set.getString("FIO"), set.getDouble("exp"),
+                            set.getString("class"));
+                    res.setViolations(set.getString("viol"));
                 }
                 return res;
             }

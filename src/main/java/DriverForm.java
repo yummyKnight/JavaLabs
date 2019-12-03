@@ -6,9 +6,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.lang.reflect.Array;
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.regex.Pattern;
 
 // TODO: -- смена лайаута
@@ -22,29 +20,33 @@ public class DriverForm extends JDialog {
     private Pattern namePattern = Pattern.compile("([a-zA-Zа-яА-Я]+ [a-zA-Zа-яА-Я]+( [a-zA-Zа-яА-Я]+)?)");
     private Pattern expPattern = Pattern.compile("\\d?\\d\\.\\d");
     // in db driver id always > 0
-    private int newDriverID = -1;
+    private int driverID = -1;
+    private Driver driver = null;
 
-    DriverForm() {
+    DriverForm(Driver driver) {
         setTitle("Досье Водителя");
         $$$setupUI$$$();
         setContentPane(rootPanel);
         setModal(true);
-        // PreferenceSize crush?????
         setSize(500, 700);
+        this.driver = driver;
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-
         ApproveButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
                     validateData();
-//                    TODO: -- проверка на совпаления
                     Driver newDriver = new Driver(NameField.getText(), Double.parseDouble(ExpField.getText())
                             , ClassComboBox.getSelectedItem().toString());
                     if (!ViolationTextArea.getText().equals("")) {
                         newDriver.setViolations(ViolationTextArea.getText());
                     }
-                    newDriverID = dbClass.insertDriver(newDriver);
+                    if (driver == null)
+                        driverID = dbClass.insertDriver(newDriver);
+                    else {
+                        // need to set up driver id previously
+                        dbClass.updateDriver(newDriver, driverID);
+                    }
                     setVisible(false);
                     dispose();
                 } catch (IllegalDataException | SQLException ex) {
@@ -52,6 +54,15 @@ public class DriverForm extends JDialog {
                 }
             }
         });
+    }
+
+     void loadData() {
+        if (driver != null) {
+            NameField.setText(driver.getFIO());
+            ClassComboBox.setSelectedItem(driver.getClassification());
+            ExpField.setText(Double.toString(driver.getExperience()));
+            ViolationTextArea.setText(driver.getViolations());
+        }
     }
 
     private void validateData() throws IllegalDataException {
@@ -63,14 +74,18 @@ public class DriverForm extends JDialog {
     }
 
     public static void main(String[] args) {
-        DriverForm dialog = new DriverForm();
+        DriverForm dialog = new DriverForm(null);
         //dialog.getContentPane().setPreferredSize(new Dimension(500, 1000));
         dialog.pack();
         dialog.setVisible(true);
     }
 
-    public int getNewDriverID() {
-        return newDriverID;
+    public int getDriverID() {
+        return driverID;
+    }
+
+    public void setDriverID(int driverID) {
+        this.driverID = driverID;
     }
 
     /**

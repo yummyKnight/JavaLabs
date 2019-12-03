@@ -78,7 +78,6 @@ public class ChangeForm extends JDialog {
         okButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // TODO: сделать быстрее
                 // adding route
                 try {
                     validateData();
@@ -201,10 +200,10 @@ public class ChangeForm extends JDialog {
     }
 
     private void addNewDriver() throws SQLException {
-        DriverForm driverForm = new DriverForm();
+        DriverForm driverForm = new DriverForm(null);
         driverForm.setVisible(true);
 //        Проверка на изменения
-        int tmpID = driverForm.getNewDriverID();
+        int tmpID = driverForm.getDriverID();
         if (tmpID != -1) {
             DefaultTableModel model = (DefaultTableModel) ExistingDriversTable.getModel();
             model.addRow(new Object[]{tmpID, dbClass.getDriverFIOByKey(tmpID)});

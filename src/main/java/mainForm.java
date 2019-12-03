@@ -158,9 +158,46 @@ public class mainForm extends JDialog {
                 }
             }
         });
+        Action deleteRows = new AbstractAction() {
+            public void actionPerformed(ActionEvent e) {
+                //do nothing
+                int i = JOptionPane.showConfirmDialog(null, "Вы действительно хотите удалить информацию из таблицы?",
+                        "Удаление", JOptionPane.YES_NO_OPTION);
+                if (i == 0) {
+                    int start = mainTable.getSelectedRow();
+                    int interval = mainTable.getSelectedRowCount();
+                    System.out.printf("%d, %d", start, interval - 1);
+                    DefaultTableModel model = (DefaultTableModel) mainTable.getModel();
+
+                    for (int j = 0; j < interval; j++) {
+                        int route_id = (int) model.getValueAt(start, 0);
+                        try {
+                            dbClass.deleteRoute(route_id);
+                            logger.info(String.format("Маршрут № %d успешно удален", route_id));
+                        } catch (SQLException ex) {
+                            ex.printStackTrace();
+                        }
+                        model.removeRow(start);
+                    }
+                    model.fireTableDataChanged();
+
+                }
+
+            }
+        };
+        mainTable.getInputMap().put(KeyStroke.getKeyStroke("DELETE"),
+                "deleteRows");
+        mainTable.getActionMap().put("deleteRows",
+                deleteRows);
+
         logger.info("UI загружен");
+        driverButton.addActionListener(e ->  {
+           DriversDialog dialog = new DriversDialog();
+           dialog.setVisible(true);
+        });
     }
 
+    /// debug
     private void findInTable(String text) {
         if (text.trim().length() == 0) {
             rowSorter.setRowFilter(null);
