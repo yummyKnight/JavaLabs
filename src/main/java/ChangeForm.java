@@ -1,7 +1,7 @@
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
-import org.slf4j.Logger;
+import org.apache.log4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
@@ -22,7 +22,7 @@ import java.util.*;
 
 public class ChangeForm extends JDialog {
     // logger
-    private final Logger logger = LoggerFactory.getLogger(ChangeForm.class);
+    private final Logger logger = Logger.getLogger(ChangeForm.class);
     // UI
     private JPanel rootPanel;
     private JTable driversOnRouteTable;
@@ -45,6 +45,7 @@ public class ChangeForm extends JDialog {
         $$$setupUI$$$();
         setContentPane(rootPanel);
         setModal(true);
+        setName("Маршрут");
         setSize(new Dimension(1000, 500));
         addNewDriverButton.addActionListener(e -> {
             try {
@@ -378,11 +379,11 @@ public class ChangeForm extends JDialog {
         stopsOnRouteTable.setAutoCreateRowSorter(false);
         scrollPane3.setViewportView(stopsOnRouteTable);
         addNewDriverButton = new JButton();
-        addNewDriverButton.setText("Добавить");
+        addNewDriverButton.setText("Добавить водителя");
         addNewDriverButton.setToolTipText("Добавть нового водителя");
         rootPanel.add(addNewDriverButton, new GridConstraints(6, 0, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         addNewStopButton = new JButton();
-        addNewStopButton.setText("Добавить");
+        addNewStopButton.setText("Добавить остановку");
         addNewStopButton.setToolTipText("Добавть новую остановку");
         rootPanel.add(addNewStopButton, new GridConstraints(6, 3, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final Spacer spacer1 = new Spacer();

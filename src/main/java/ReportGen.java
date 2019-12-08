@@ -1,7 +1,6 @@
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.pdf.BaseFont;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.log4j.Logger;
 import org.xhtmlrenderer.pdf.ITextRenderer;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
@@ -16,7 +15,7 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
 public class ReportGen {
-    final static Logger logger = LoggerFactory.getLogger(ReportGen.class);
+    private static final org.apache.log4j.Logger logger = Logger.getLogger(ReportGen.class);
     static void createHTML(String srcXmlFile, String srcXsltFile, String outputFileName) throws TransformerException, IOException {
         // creating html from xml with xslt
         /* Create a TransformerFactory object */
@@ -45,16 +44,6 @@ public class ReportGen {
         renderer.createPDF(os);
         os.close();
         logger.info("PDF отчет создан");
-
-//        createHTML(srcXmlFile,srcXsltFile,outputFileName);
-//        Document document = new Document();
-//        // Создаем writer для записи в pdf
-//        PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream("output.pdf"));
-//        // Открываем для чтения html страничку
-//        document.open();
-//        // Парсим её и записываем в PDF
-//        XMLWorkerHelper.getInstance().parseXHtml(writer, document, new FileInputStream(outputFileName));
-//        document.close();
     }
 
     public static void main(String[] args) throws TransformerException, IOException, DocumentException {

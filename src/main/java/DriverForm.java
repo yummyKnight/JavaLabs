@@ -56,7 +56,7 @@ public class DriverForm extends JDialog {
         });
     }
 
-     void loadData() {
+    void loadData() {
         if (driver != null) {
             NameField.setText(driver.getFIO());
             ClassComboBox.setSelectedItem(driver.getClassification());
@@ -70,7 +70,6 @@ public class DriverForm extends JDialog {
             throw new IllegalDataException("Неправильно введено ФИО водителя");
         if (!Pattern.matches(expPattern.pattern(), ExpField.getText()))
             throw new IllegalDataException("Неправильно введен опыт работы");
-        // нужно ли?
     }
 
     public static void main(String[] args) {
@@ -133,15 +132,13 @@ public class DriverForm extends JDialog {
     }
 
     /**
-     * @noinspection ALL
      */
     public JComponent $$$getRootComponent$$$() {
         return rootPanel;
     }
 
     private void createUIComponents() {
-        // TODO: place custom component creation code here
-//        TODO: переделать в обычный JText
+
         ClassComboBox = new JComboBox<>(Driver.s_classification);
     }
 }

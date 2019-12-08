@@ -4,33 +4,36 @@
         <html>
             <body>
                 <h2>Расписание</h2>
-                <xsl:for-each select="Schedule/Route">
-                    <table border="1">
-                        <tr bgcolor="#9acd32">
-                            <th style="text-align:left">Остановки</th>
-                            <th style="text-align:left">Время</th>
-                            <th style="text-align:left">Водители</th>
-                        </tr>
-                        <xsl:variable name="cnt" select="count(Drivers/driver) + 1"/>
+                <table border="1">
+                    <tr bgcolor="#9acd32">
+                        <th style="text-align:left">ID</th>
+                        <th style="text-align:left">Остановки</th>
+                        <th style="text-align:left">Время</th>
+                        <th style="text-align:left">Водители</th>
+                    </tr>
+                    <xsl:for-each select="Schedule/Route">
+                    <xsl:variable name="cnt" select="count(Drivers/driver) + 1"/>
+                    <tr>
+                        <td rowspan="{$cnt}">
+                            <xsl:value-of select="ID/@id"/>
+                        </td>
+                        <td rowspan="{$cnt}">
+                            <xsl:value-of select="Stops/@stopsToString"/>
+                        </td>
+                        <td rowspan="{$cnt}">
+                            <xsl:value-of select="Time/@shortTime"/>
+                        </td>
+                    </tr>
+                    <xsl:for-each select="Drivers/driver">
                         <tr>
-                            <td rowspan="{$cnt}">
-                                <xsl:value-of select="Stops/@stopsToString"/>
-                            </td>
-                            <td rowspan="{$cnt}">
-                                <xsl:value-of select="Time/@shortTime"/>
+                            <td>
+                                <xsl:value-of select="@FIO"/>
                             </td>
                         </tr>
-                        <xsl:for-each select="Drivers/driver">
-                            <tr>
-                                <td>
-                                    <xsl:value-of select="@FIO"/>
-                                </td>
-                            </tr>
-                        </xsl:for-each>
-
-                    </table>
-                </xsl:for-each>
-            </body>
-        </html>
-    </xsl:template>
-</xsl:stylesheet>
+                    </xsl:for-each>
+                    </xsl:for-each>
+                </table>
+        </body>
+    </html>
+</xsl:template>
+        </xsl:stylesheet>

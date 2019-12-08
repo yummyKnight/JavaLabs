@@ -1,4 +1,4 @@
-import org.slf4j.Logger;
+import org.apache.log4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
@@ -11,7 +11,7 @@ import java.sql.SQLException;
 import java.util.HashMap;
 
 public class DriversDialog extends JDialog {
-    private final Logger logger = LoggerFactory.getLogger(mainForm.class);
+    private final Logger logger = Logger.getLogger(mainForm.class);
     private JPanel rootPanel;
     private JTable DriversTable;
     private JButton addButton;
@@ -22,6 +22,7 @@ public class DriversDialog extends JDialog {
         createData();
         $$$setupUI$$$();
         setContentPane(rootPanel);
+        setName("Все водители");
         setSize(new Dimension(1000, 500));
         setModal(true);
         addListeners();

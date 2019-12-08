@@ -1,23 +1,21 @@
-import groovy.lang.Sequence;
+import org.apache.log4j.Logger;
 
 import java.sql.*;
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
 public class dbClass {
     public static Connection conn;
+    private static final Logger logger = Logger.getLogger(dbClass.class);
 
-    // --------ПОДКЛЮЧЕНИЕ К БАЗЕ ДАННЫХ--------
     public static void Conn() throws SQLException {
         conn = null;
         conn = DriverManager.getConnection("jdbc:sqlite:../myFirstBD.db");
         conn.setAutoCommit(false);
-        System.out.println("База Подключена!");
+        logger.debug("База Подключена!");
     }
 
-    // --------Заполнение таблицы--------
     public static int insertDriver(Driver driver) throws SQLException {
         String sql = "INSERT INTO 'Drivers' ('exp', 'class', 'FIO')" + " VALUES (?,?,?)";
         PreparedStatement pstmt = conn.prepareStatement(sql);
@@ -35,7 +33,7 @@ public class dbClass {
                     pstmt1.setString(1, driver.getViolations());
                     pstmt1.setInt(2, driver_id);
                     pstmt1.executeUpdate();
-                    System.out.println("Таблица заполнена");
+                    logger.debug("Таблица заполнена");
                 }
                 pstmt.close();
                 conn.commit();
@@ -43,6 +41,7 @@ public class dbClass {
             } else {
                 pstmt.close();
                 conn.rollback();
+                logger.fatal("Creating driver failed, no ID obtained.");
                 throw new SQLException("Creating driver failed, no ID obtained.");
             }
         }
@@ -63,7 +62,7 @@ public class dbClass {
             }
             pstmt.executeUpdate();
             linkStopsToRoute(route_id, route.getStops());
-            System.out.println("Таблица заполнена");
+            logger.debug("Таблица заполнена");
             conn.commit();
         }
     }
@@ -97,6 +96,7 @@ public class dbClass {
             conn.commit();
         } catch (SQLException e) {
             conn.rollback();
+            logger.error(e.getMessage());
             throw e;
         }
 
@@ -186,7 +186,7 @@ public class dbClass {
                 }
             }
         }
-        System.out.println("Таблица выведена");
+        logger.debug("Таблица выведена");
         return res;
     }
 
@@ -235,6 +235,22 @@ public class dbClass {
     public static ArrayList<Integer> getAllDriversID() throws SQLException {
         ArrayList<Integer> res = new ArrayList<>();
         String sql = " SELECT Drivers.id FROM Drivers";
+        return getIds(res, sql);
+    }
+
+    public static ArrayList<Integer> getAllRoutesID() {
+        ArrayList<Integer> res = null;
+        try {
+            res = new ArrayList<>();
+            String sql = " SELECT Route.id FROM Route";
+            return getIds(res, sql);
+        } catch (SQLException e) {
+            logger.error(e.getMessage());
+        }
+        return res;
+    }
+
+    private static ArrayList<Integer> getIds(ArrayList<Integer> res, String sql) throws SQLException {
         try (Statement statement = conn.createStatement()) {
             try (ResultSet set = statement.executeQuery(sql)) {
                 while (set.next()) {
@@ -245,26 +261,7 @@ public class dbClass {
         }
     }
 
-    public static ArrayList<Integer> getAllRoutesID() {
-        ArrayList<Integer> res = null;
-        try {
-            res = new ArrayList<>();
-            String sql = " SELECT Route.id FROM Route";
-            try (Statement statement = conn.createStatement()) {
-                try (ResultSet set = statement.executeQuery(sql)) {
-                    while (set.next()) {
-                        res.add(set.getInt("id"));
-                    }
-                    return res;
-                }
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
-        return res;
-    }
-
-    public static void unLinkStopsToRoute(int route_id) throws SQLException {
+    static void unLinkStopsToRoute(int route_id) throws SQLException {
         String sql = "DELETE FROM StopsToRoute WHERE route_id = ?";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, route_id);
@@ -272,7 +269,7 @@ public class dbClass {
         }
     }
 
-    public static ArrayList<String> getAllStops() throws SQLException {
+    static ArrayList<String> getAllStops() throws SQLException {
         ArrayList<String> res = new ArrayList<>();
         String sql = " SELECT Stops.stop_name FROM Stops";
         try (Statement statement = conn.createStatement()) {
@@ -285,7 +282,7 @@ public class dbClass {
         }
     }
 
-    public static HashMap<Integer, String> getDriversOnRoute(int route_id) throws SQLException {
+    static HashMap<Integer, String> getDriversOnRoute(int route_id) throws SQLException {
         HashMap<Integer, String> res = new HashMap<>();
         String sql = " SELECT Drivers.id,Drivers.FIO FROM Drivers WHERE route_id = ?";
         try (PreparedStatement statement = conn.prepareStatement(sql)) {
@@ -320,7 +317,7 @@ public class dbClass {
     // --------Закрытие--------
     public static void CloseDB() throws SQLException {
         conn.close();
-        System.out.println("Соединения закрыты");
+        logger.debug("Соединения закрыты");
     }
 
     static String getDriverFIOByKey(int tmpID) throws SQLException {

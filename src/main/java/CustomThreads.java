@@ -1,5 +1,5 @@
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import org.apache.log4j.Logger;
 import org.xml.sax.SAXException;
 
 import javax.swing.*;
@@ -15,7 +15,7 @@ public class CustomThreads {
     }
 }
 class ThreadHTML extends Thread {
-    private final Logger logger = LoggerFactory.getLogger(ThreadHTML.class);
+    private final Logger logger = Logger.getLogger(CustomThreads.class);
     private JTable thisIsWrong;
     ThreadHTML(String name, JTable table) {
         super("ThreadHTML_" + name);
@@ -37,7 +37,7 @@ class ThreadHTML extends Thread {
     }
 }
 class changeXMLThread extends Thread {
-    private final Logger logger = LoggerFactory.getLogger(changeXMLThread.class);
+    private final Logger logger = Logger.getLogger(changeXMLThread.class);
     private JTable thisIsWrong;
      changeXMLThread(String name, JTable table) {
         super("changeXMLThread_" + name);
@@ -60,7 +60,7 @@ class changeXMLThread extends Thread {
     }
 }
 class loadFromXMLThread extends Thread{
-    private final Logger logger = LoggerFactory.getLogger(loadFromXMLThread.class);
+    private final Logger logger = Logger.getLogger(loadFromXMLThread.class);
     private JTable thisIsWrong;
      loadFromXMLThread(String name, JTable table) {
         super("loadFromXMLThread_" + name);

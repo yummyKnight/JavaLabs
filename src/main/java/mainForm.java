@@ -1,6 +1,5 @@
 import org.xml.sax.SAXException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -8,6 +7,7 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.BufferedReader;
@@ -19,14 +19,16 @@ import java.util.HashMap;
 import java.util.StringJoiner;
 import java.util.regex.PatternSyntaxException;
 
+import org.apache.log4j.Logger;
+
 public class mainForm extends JDialog {
     // logger
-    private final Logger logger = LoggerFactory.getLogger(mainForm.class);
+    private final Logger logger = Logger.getLogger(mainForm.class);
 
     //UI
     private JPanel contentPane;
     private JButton addButton;
-    private JButton deleteButton;
+    private JButton generateButton;
     private JButton saveButton;
     private JToolBar ToolBar;
     private JButton questionButton;
@@ -47,7 +49,7 @@ public class mainForm extends JDialog {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        logger.debug("Начальные данные загружены");
+        logger.debug("Данные с БД загружены");
     }
 
     private void updateTable() {
@@ -60,7 +62,7 @@ public class mainForm extends JDialog {
             model.addRow(tableDatum);
         }
         model.fireTableDataChanged();
-        logger.debug("Таблица обновлена");
+        logger.debug("Главная таблица обновлена");
     }
 
     private Object[][] createTableData() {
@@ -84,7 +86,6 @@ public class mainForm extends JDialog {
         } catch (SQLException e) {
             logger.error(e.getMessage());
         }
-        logger.debug("Данные успешно загружены");
         return null;
     }
 
@@ -95,6 +96,7 @@ public class mainForm extends JDialog {
         setContentPane(contentPane);
         setModal(true);
         // Listeners:
+
         routeButton.addActionListener(e -> addNewRout());
         // editing
         mainTable.addMouseListener(new MouseAdapter() {
@@ -128,19 +130,19 @@ public class mainForm extends JDialog {
                 throw new UnsupportedOperationException();
             }
         });
+        // create xml report
         saveButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-//                try {
-//                    saveData();
-//                    XMLWrapper.writeXML(mainTable, "table.xml");
-//                    CustomThreads.doExperiment(mainTable);
-                JOptionPane.showMessageDialog(null, "Данные успешно записаны");
-                //                } catch (IOException | TransformerException | ParserConfigurationException ex) {
-//                    JOptionPane.showMessageDialog(null, "Ошибка записи!!!");
-//                }
+                try {
+                    XMLWrapper.writeXML(mainTable, "table.xml");
+                    JOptionPane.showMessageDialog(null, "Данные успешно записаны");
+                } catch (IOException | TransformerException | ParserConfigurationException ex) {
+                    JOptionPane.showMessageDialog(null, "Ошибка записи!!!");
+                }
             }
         });
+        // load from xml report
         addButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -158,6 +160,7 @@ public class mainForm extends JDialog {
                 }
             }
         });
+        // delete info from table and db
         Action deleteRows = new AbstractAction() {
             public void actionPerformed(ActionEvent e) {
                 //do nothing
@@ -189,15 +192,64 @@ public class mainForm extends JDialog {
                 "deleteRows");
         mainTable.getActionMap().put("deleteRows",
                 deleteRows);
+        // Drivers table
+        driverButton.addActionListener(e -> {
+            DriversDialog dialog = new DriversDialog();
+            dialog.setVisible(true);
+        });
+        generateButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    ReportGen.createHTML("table.xml", "template.xslt", "report.html");
+                    JOptionPane.showMessageDialog(null, "Html отчет успешно сгененрирован!");
+                } catch (TransformerException | IOException ex) {
+                    JOptionPane.showMessageDialog(null, "Ошибка загрузки");
+                    logger.error(ex.getMessage());
+                }
+            }
+        });
+
+        addWindowListener(new WindowListener() {
+            @Override
+            public void windowOpened(WindowEvent e) {
+            }
+
+            @Override
+            public void windowClosing(WindowEvent e) {
+                try {
+                    dbClass.CloseDB();
+                } catch (SQLException t) {
+                    logger.error(t.getMessage());
+                }
+                e.getWindow().dispose();
+            }
+
+            @Override
+            public void windowClosed(WindowEvent e) {
+            }
+
+            @Override
+            public void windowIconified(WindowEvent e) {
+            }
+
+            @Override
+            public void windowDeiconified(WindowEvent e) {
+            }
+
+            @Override
+            public void windowActivated(WindowEvent e) {
+            }
+
+            @Override
+            public void windowDeactivated(WindowEvent e) {
+            }
+        });
 
         logger.info("UI загружен");
-        driverButton.addActionListener(e ->  {
-           DriversDialog dialog = new DriversDialog();
-           dialog.setVisible(true);
-        });
+
     }
 
-    /// debug
     private void findInTable(String text) {
         if (text.trim().length() == 0) {
             rowSorter.setRowFilter(null);
@@ -229,10 +281,10 @@ public class mainForm extends JDialog {
           */
         buttonConverter(addButton);
         addButton.setIcon(new ImageIcon("icons/play-button.png"));
-        addButton.setPressedIcon(new ImageIcon("icons/play-deleteButton.png"));
-        buttonConverter(deleteButton);
-        deleteButton.setIcon(new ImageIcon("icons/minus.png"));
-        deleteButton.setPressedIcon(new ImageIcon("icons/minus (1).png"));
+        addButton.setPressedIcon(new ImageIcon("icons/play-generateButton.png"));
+        buttonConverter(generateButton);
+        generateButton.setIcon(new ImageIcon("icons/generate.png"));
+        generateButton.setPressedIcon(new ImageIcon("icons/generate1.png"));
         buttonConverter(saveButton);
         saveButton.setIcon(new ImageIcon("icons/save (1).png"));
         saveButton.setPressedIcon(new ImageIcon("icons/save (2).png"));
@@ -251,6 +303,7 @@ public class mainForm extends JDialog {
         button.setContentAreaFilled(false);
     }
 
+    // save data from main table as txt
     private void saveData() throws IOException {
         FileWriter writer = new FileWriter("save.txt");
         for (Object[] data : createTableData()) {
@@ -258,8 +311,10 @@ public class mainForm extends JDialog {
             writer.write(row);
         }
         writer.close();
+        logger.debug("Данные сохранены в save.txt");
     }
 
+    // load data from txt to main table
     private void loadData() throws IOException {
         BufferedReader reader = new BufferedReader(new FileReader("save.txt"));
         DefaultTableModel model = (DefaultTableModel) mainTable.getModel();
@@ -270,6 +325,7 @@ public class mainForm extends JDialog {
             model.addRow(data);
         }
         model.fireTableDataChanged();
+        logger.debug("Данные загружены из save.txt");
     }
 
     public static void main(String[] args) {
@@ -306,10 +362,10 @@ public class mainForm extends JDialog {
         ToolBar.add(addButton);
         final JToolBar.Separator toolBar$Separator1 = new JToolBar.Separator();
         ToolBar.add(toolBar$Separator1);
-        deleteButton = new JButton();
-        deleteButton.setText("");
-        deleteButton.setToolTipText("Удалить инфу");
-        ToolBar.add(deleteButton);
+        generateButton = new JButton();
+        generateButton.setText("");
+        generateButton.setToolTipText("Удалить инфу");
+        ToolBar.add(generateButton);
         final JToolBar.Separator toolBar$Separator2 = new JToolBar.Separator();
         ToolBar.add(toolBar$Separator2);
         saveButton = new JButton();

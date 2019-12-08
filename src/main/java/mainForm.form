@@ -28,7 +28,7 @@
             <constraints/>
             <properties/>
           </component>
-          <component id="ed961" class="javax.swing.JButton" binding="deleteButton">
+          <component id="ed961" class="javax.swing.JButton" binding="generateButton">
             <constraints/>
             <properties>
               <text value=""/>
