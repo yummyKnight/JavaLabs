@@ -9,7 +9,6 @@ import java.awt.event.ActionListener;
 import java.sql.SQLException;
 import java.util.regex.Pattern;
 
-// TODO: -- смена лайаута
 public class DriverForm extends JDialog {
     private JPanel rootPanel;
     private JComboBox ClassComboBox;
@@ -132,6 +131,7 @@ public class DriverForm extends JDialog {
     }
 
     /**
+     *
      */
     public JComponent $$$getRootComponent$$$() {
         return rootPanel;

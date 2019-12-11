@@ -364,7 +364,7 @@ public class mainForm extends JDialog {
         ToolBar.add(toolBar$Separator1);
         generateButton = new JButton();
         generateButton.setText("");
-        generateButton.setToolTipText("Удалить инфу");
+        generateButton.setToolTipText("Сгенерировать отчет");
         ToolBar.add(generateButton);
         final JToolBar.Separator toolBar$Separator2 = new JToolBar.Separator();
         ToolBar.add(toolBar$Separator2);
@@ -419,7 +419,6 @@ public class mainForm extends JDialog {
 
     private void createUIComponents() {
         DefaultTableModel model;
-        // TODO: place custom component creation code here
         model = new DefaultTableModel(createTableData(), header) {
             @Override
             public boolean isCellEditable(int row, int column) {
